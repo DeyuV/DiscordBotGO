@@ -2,8 +2,9 @@ package Guild
 
 import (
 	"context"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
+
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 func NewRepository(db *pgxpool.Pool) Repository {
@@ -86,14 +87,13 @@ func (r *repositoryImpl) Add(ctx context.Context, guildId string, guildName stri
 func (r *repositoryImpl) GetById(ctx context.Context, guildId string) (*Guilds, error) {
 	var guild Guilds
 
-	err := r.db.QueryRow(ctx, `SELECT * FROM guilds WHERE id = $1`, guildId).Scan(&guild)
+	err := r.db.QueryRow(ctx, `SELECT * FROM guilds WHERE id = $1`, guildId).Scan(&guild.GuildID, &guild.GuildName)
 	if err != nil {
 		return nil, err
 	}
 	return &guild, nil
 }
 
-// DeleteGuild deletes a guild from database
 func (r *repositoryImpl) DeleteGuild(ctx context.Context, guildId string) error {
 	_, err := r.db.Exec(ctx, `DELETE FROM guilds WHERE id = $1`, guildId)
 

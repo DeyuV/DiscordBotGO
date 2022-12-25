@@ -5,15 +5,16 @@ import (
 	"GOdiscordBOT/app/Guild"
 	"context"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	_ "github.com/bwmarrin/discordgo"
-	"github.com/jackc/pgx/v4/pgxpool"
-	"github.com/joho/godotenv"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
+	_ "github.com/bwmarrin/discordgo"
+	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/joho/godotenv"
 )
 
 var token string
@@ -26,8 +27,9 @@ func main() {
 	}
 	time.Local = loc
 	// Loading environment variables
-	err = godotenv.Load(".env")
+	err = godotenv.Load()
 	if err != nil {
+		fmt.Println(err)
 		log.Fatalf("Error loading .env file")
 	}
 

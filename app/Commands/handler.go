@@ -3,15 +3,21 @@ package Commands
 import (
 	"context"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 var (
-	logSpMessageID string
-	logSpChannelID string
+	logSpMessageID        string
+	logSpChannelID        string
+	spHistory             = false
+	serverOnlineMessage   Message
+	serverOfflineMessage  Message
+	serverMaintMessage    Message
+	serverStatusChannelID string
 )
 
 type Service interface {
@@ -25,6 +31,7 @@ func ToggleCommands(svc Service) func(s *discordgo.Session, i *discordgo.Interac
 
 	}
 }
+
 func ResetSpLog(s *discordgo.Session) {
 	embed := &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{},
@@ -279,8 +286,11 @@ func HandleSpLogMessage(svc Service) func(s *discordgo.Session, i *discordgo.Int
 			switch i.Type {
 			case discordgo.InteractionApplicationCommand:
 				{
-					if i.ApplicationCommandData().Name == "sp-history" {
-						go InitResetSpLog(s)
+					if i.ApplicationCommandData().Name == "history-sp" {
+						if !spHistory {
+							go InitResetSpLog(s)
+							spHistory = true
+						}
 
 						embed := &discordgo.MessageEmbed{
 							Author: &discordgo.MessageEmbedAuthor{},
@@ -320,6 +330,7 @@ func HandleSpLogMessage(svc Service) func(s *discordgo.Session, i *discordgo.Int
 								Flags:   discordgo.MessageFlagsEphemeral,
 							},
 						})
+
 					}
 				}
 			}
@@ -345,6 +356,7 @@ func HandleServerStatus() func(s *discordgo.Session, i *discordgo.InteractionCre
 			case discordgo.InteractionApplicationCommand:
 				{
 					if i.ApplicationCommandData().Name == "server-online" {
+						serverStatusChannelID = i.ChannelID
 						editChannel := discordgo.ChannelEdit{
 							Name:     " 🟢┃game-info",
 							Position: channel.Position,
@@ -361,8 +373,32 @@ func HandleServerStatus() func(s *discordgo.Session, i *discordgo.InteractionCre
 								Flags:   discordgo.MessageFlagsEphemeral,
 							},
 						})
+						if err != nil {
+							fmt.Println(err)
+							return
+						}
+
+						message, err := s.ChannelMessageSend(serverStatusChannelID, "<t:"+strconv.Itoa(int(time.Now().Unix()))+":R> 🟢 **"+i.ApplicationCommandData().Options[0].StringValue()+"**")
+						if err != nil {
+							fmt.Println(err)
+							return
+						}
+						serverOnlineMessage.ID = message.ID
+						serverOnlineMessage.Content = message.Content
+
+						if serverOfflineMessage.ID != "" {
+							if serverOfflineMessage.Content[0] != '~' {
+								s.ChannelMessageEdit(serverStatusChannelID, serverOfflineMessage.ID, "~~"+serverOfflineMessage.Content+"~~")
+							}
+						}
+						if serverMaintMessage.ID != "" {
+							if serverMaintMessage.Content[0] != '~' {
+								s.ChannelMessageEdit(serverStatusChannelID, serverMaintMessage.ID, "~~"+serverMaintMessage.Content+"~~")
+							}
+						}
 					}
 					if i.ApplicationCommandData().Name == "server-offline" {
+						serverStatusChannelID = i.ChannelID
 						editChannel := discordgo.ChannelEdit{
 							Name:     "🔴┃game-info❕",
 							Position: channel.Position,
@@ -379,8 +415,33 @@ func HandleServerStatus() func(s *discordgo.Session, i *discordgo.InteractionCre
 								Flags:   discordgo.MessageFlagsEphemeral,
 							},
 						})
+						if err != nil {
+							fmt.Println(err)
+							return
+						}
+
+						message, err := s.ChannelMessageSend(serverStatusChannelID, "<t:"+strconv.Itoa(int(time.Now().Unix()))+":R>🔴 **"+i.ApplicationCommandData().Options[0].StringValue()+"**")
+						if err != nil {
+							fmt.Println(err)
+							return
+						}
+						serverOfflineMessage.ID = message.ID
+						serverOfflineMessage.Content = message.Content
+
+						if serverOnlineMessage.ID != "" {
+							if serverOnlineMessage.Content[0] != '~' {
+								s.ChannelMessageEdit(serverStatusChannelID, serverOnlineMessage.ID, "~~"+serverOnlineMessage.Content+"~~")
+							}
+						}
+						if serverMaintMessage.ID != "" {
+							if serverMaintMessage.Content[0] != '~' {
+								s.ChannelMessageEdit(serverStatusChannelID, serverMaintMessage.ID, "~~"+serverMaintMessage.Content+"~~")
+							}
+						}
+
 					}
 					if i.ApplicationCommandData().Name == "server-maint" {
+						serverStatusChannelID = i.ChannelID
 						editChannel := discordgo.ChannelEdit{
 							Name:     "🟠┃game-info❕",
 							Position: channel.Position,
@@ -397,12 +458,36 @@ func HandleServerStatus() func(s *discordgo.Session, i *discordgo.InteractionCre
 								Flags:   discordgo.MessageFlagsEphemeral,
 							},
 						})
+						if err != nil {
+							fmt.Println(err)
+							return
+						}
+
+						message, err := s.ChannelMessageSend(serverStatusChannelID, "<t:"+strconv.Itoa(int(time.Now().Unix()))+":R> 🟠 **"+i.ApplicationCommandData().Options[0].StringValue()+"**")
+						if err != nil {
+							fmt.Println(err)
+							return
+						}
+						serverMaintMessage.ID = message.ID
+						serverMaintMessage.Content = message.Content
+
+						if serverOfflineMessage.ID != "" {
+							if serverOfflineMessage.Content[0] != '~' {
+								s.ChannelMessageEdit(serverStatusChannelID, serverOfflineMessage.ID, "~~"+serverOfflineMessage.Content+"~~")
+							}
+						}
+						if serverOnlineMessage.ID != "" {
+							if serverOnlineMessage.Content[0] != '~' {
+								s.ChannelMessageEdit(serverStatusChannelID, serverOnlineMessage.ID, "~~"+serverOnlineMessage.Content+"~~")
+							}
+						}
 					}
 				}
 			}
 		}
 	}
 }
+
 func Register(bot *discordgo.Session, svc Service) {
 	bot.AddHandler(SP(svc))
 	bot.AddHandler(HandleSpNotification(svc))

@@ -3,9 +3,10 @@ package Commands
 import (
 	"context"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"strconv"
 	"strings"
+
+	"github.com/bwmarrin/discordgo"
 )
 
 var (
@@ -17,6 +18,7 @@ var (
 	bcuResponseData []discordgo.MessageComponent
 	aniMenuID       string
 	bcuMenuID       string
+	spChannelID     string
 )
 
 func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -90,11 +92,12 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			case discordgo.InteractionApplicationCommand:
 				{
 					if i.ApplicationCommandData().Name == "ani-sp" {
+						spChannelID = i.ChannelID
 						err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 							Type: discordgo.InteractionResponseChannelMessageWithSource,
 							Data: &discordgo.InteractionResponseData{
 								CustomID: "ani-sp",
-								Content:  "You used command to spawn ani menu",
+								Content:  "You used command to spawn ANI menu",
 								Flags:    discordgo.MessageFlagsEphemeral,
 							},
 						})
@@ -114,11 +117,12 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 					}
 
 					if i.ApplicationCommandData().Name == "bcu-sp" {
+						spChannelID = i.ChannelID
 						err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 							Type: discordgo.InteractionResponseChannelMessageWithSource,
 							Data: &discordgo.InteractionResponseData{
 								CustomID: "bcu-sp",
-								Content:  "You used command to spawn ani menu",
+								Content:  "You used command to spawn BCU menu",
 								Flags:    discordgo.MessageFlagsEphemeral,
 							},
 						})
@@ -139,7 +143,6 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			case discordgo.InteractionMessageComponent:
 				{
 					if i.Message.ID == aniMenuID || i.Message.ID == bcuMenuID {
-						fmt.Println(i.MessageComponentData().Values[0])
 						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 							Type: discordgo.InteractionResponseModal,
 							Data: &discordgo.InteractionResponseData{
