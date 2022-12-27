@@ -219,7 +219,7 @@ func HandleSpNotificationReactions(svc Service) func(s *discordgo.Session, m *di
 					value = 60 - value
 
 					embed := CreateSPHistoryEmbed(strings.ReplaceAll(logMessage.Embeds[0].Fields[0].Value, "-", "")+"\n"+message.Embeds[0].Fields[0].Value,
-						strings.ReplaceAll(logMessage.Embeds[0].Fields[1].Value, "-", "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>",
+						strings.ReplaceAll(logMessage.Embeds[0].Fields[1].Value, "-", "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Minute*time.Duration(value*-1)).Unix()))+":R>",
 						strings.ReplaceAll(logMessage.Embeds[0].Fields[2].Value, "-", "")+"\n"+"<:"+winningNationShort+":"+svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort)+"> "+winningNationLong)
 
 					_, err = s.ChannelMessageEditEmbed(logSpChannelID, logSpMessageID, embed)

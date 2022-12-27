@@ -207,19 +207,6 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 						return
 					}
 
-					/* if t > 60 {
-						err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-							Type: discordgo.InteractionResponseChannelMessageWithSource,
-							Data: &discordgo.InteractionResponseData{
-								Content: "Please insert a number bellow 61",
-							},
-						})
-						if err != nil {
-							fmt.Println(err)
-						}
-						return
-					} */
-
 					ani := false
 					for _, m := range ANImaps {
 						if m == i.ModalSubmitData().CustomID {
