@@ -44,8 +44,7 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 						Default: false,
 					})
 				}
-			}
-			if aniResponseData == nil {
+
 				aniResponseData = []discordgo.MessageComponent{
 					discordgo.ActionsRow{
 						Components: []discordgo.MessageComponent{
@@ -73,8 +72,7 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 						Default: false,
 					})
 				}
-			}
-			if bcuResponseData == nil {
+
 				bcuResponseData = []discordgo.MessageComponent{
 					discordgo.ActionsRow{
 						Components: []discordgo.MessageComponent{
@@ -199,22 +197,28 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			case discordgo.InteractionModalSubmit:
 				{
 					t, err := strconv.Atoi(i.ModalSubmitData().Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value)
-					if err != nil {
+					if err != nil || t > 60 {
+						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+							Type: discordgo.InteractionResponseChannelMessageWithSource,
+							Data: &discordgo.InteractionResponseData{
+								Content: "Please insert a number bellow 61",
+							},
+						})
 						return
 					}
 
-					if t > 60 {
+					/* if t > 60 {
 						err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 							Type: discordgo.InteractionResponseChannelMessageWithSource,
 							Data: &discordgo.InteractionResponseData{
-								Content: "Please insert a time bellow 61",
+								Content: "Please insert a number bellow 61",
 							},
 						})
 						if err != nil {
 							fmt.Println(err)
 						}
 						return
-					}
+					} */
 
 					ani := false
 					for _, m := range ANImaps {

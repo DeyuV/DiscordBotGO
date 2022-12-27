@@ -32,29 +32,32 @@ func ToggleCommands(svc Service) func(s *discordgo.Session, i *discordgo.Interac
 	}
 }
 
-func ResetSpLog(s *discordgo.Session) {
-	embed := &discordgo.MessageEmbed{
+func CreateSPHistoryEmbed(mapValue, timeValue, nationValue string) *discordgo.MessageEmbed {
+	return &discordgo.MessageEmbed{
 		Author: &discordgo.MessageEmbedAuthor{},
 		Color:  0x000000,
 		Title:  "STRATEGIC POINT HISTORY",
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "Map: ",
-				Value:  "----------",
+				Value:  mapValue,
 				Inline: true,
 			},
 			{
 				Name:   "Spawn Time: ",
-				Value:  "----------",
+				Value:  timeValue,
 				Inline: true,
 			},
 			{
 				Name:   "Winning Nation: ",
-				Value:  "----------",
+				Value:  nationValue,
 				Inline: true,
 			},
 		},
 	}
+}
+func ResetSpLog(s *discordgo.Session) {
+	embed := CreateSPHistoryEmbed("----------", "----------", "----------")
 
 	_, err := s.ChannelMessageEditEmbed(logSpChannelID, logSpMessageID, embed)
 	if err != nil {
@@ -81,7 +84,7 @@ func InitResetSpLog(s *discordgo.Session) {
 func HandleSpNotification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCreate) {
 	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if m.Author.ID == s.State.User.ID {
-			if m.Content == "Please insert a time bellow 61" {
+			if m.Content == "Please insert a number bellow 61" {
 				go func() {
 					time.Sleep(10 * time.Second)
 					err := s.ChannelMessageDelete(m.ChannelID, m.ID)
@@ -165,28 +168,9 @@ func HandleSpNotification(svc Service) func(s *discordgo.Session, m *discordgo.M
 						winningNationLong = "Bygeniou City United"
 					}
 
-					embed := &discordgo.MessageEmbed{
-						Author: &discordgo.MessageEmbedAuthor{},
-						Color:  0x000000,
-						Title:  "STRATEGIC POINT HISTORY",
-						Fields: []*discordgo.MessageEmbedField{
-							{
-								Name:   "Map: ",
-								Value:  strings.ReplaceAll(logMessage.Embeds[0].Fields[0].Value, "-", "") + "\n" + mapName,
-								Inline: true,
-							},
-							{
-								Name:   "Spawn Time: ",
-								Value:  strings.ReplaceAll(logMessage.Embeds[0].Fields[1].Value, "-", "") + "\n" + "<t:" + strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix())) + ":R>",
-								Inline: true,
-							},
-							{
-								Name:   "Winning Nation: ",
-								Value:  strings.ReplaceAll(logMessage.Embeds[0].Fields[2].Value, "-", "") + "\n" + "<:" + winningNationShort + ":" + svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort) + "> " + winningNationLong,
-								Inline: true,
-							},
-						},
-					}
+					embed := CreateSPHistoryEmbed(strings.ReplaceAll(logMessage.Embeds[0].Fields[0].Value, "-", "")+"\n"+mapName,
+						strings.ReplaceAll(logMessage.Embeds[0].Fields[1].Value, "-", "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>",
+						strings.ReplaceAll(logMessage.Embeds[0].Fields[2].Value, "-", "")+"\n"+"<:"+winningNationShort+":"+svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort)+"> "+winningNationLong)
 
 					_, err = s.ChannelMessageEditEmbed(logSpChannelID, logSpMessageID, embed)
 					if err != nil {
@@ -234,28 +218,9 @@ func HandleSpNotificationReactions(svc Service) func(s *discordgo.Session, m *di
 					value, _ := strconv.Atoi(strings.Split(message.Embeds[0].Fields[1].Value, " ")[0])
 					value = 60 - value
 
-					embed := &discordgo.MessageEmbed{
-						Author: &discordgo.MessageEmbedAuthor{},
-						Color:  0x000000,
-						Title:  "STRATEGIC POINT HISTORY",
-						Fields: []*discordgo.MessageEmbedField{
-							{
-								Name:   "Map: ",
-								Value:  strings.ReplaceAll(logMessage.Embeds[0].Fields[0].Value, "-", "") + "\n" + message.Embeds[0].Fields[0].Value,
-								Inline: true,
-							},
-							{
-								Name:   "Spawn Time: ",
-								Value:  strings.ReplaceAll(logMessage.Embeds[0].Fields[1].Value, "-", "") + "\n" + "<t:" + strconv.Itoa(int(time.Now().Add(time.Minute*time.Duration(1*-value)).Unix())) + ":R>",
-								Inline: true,
-							},
-							{
-								Name:   "Winning Nation: ",
-								Value:  strings.ReplaceAll(logMessage.Embeds[0].Fields[2].Value, "-", "") + "\n" + "<:" + winningNationShort + ":" + svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort) + "> " + winningNationLong,
-								Inline: true,
-							},
-						},
-					}
+					embed := CreateSPHistoryEmbed(strings.ReplaceAll(logMessage.Embeds[0].Fields[0].Value, "-", "")+"\n"+message.Embeds[0].Fields[0].Value,
+						strings.ReplaceAll(logMessage.Embeds[0].Fields[1].Value, "-", "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>",
+						strings.ReplaceAll(logMessage.Embeds[0].Fields[2].Value, "-", "")+"\n"+"<:"+winningNationShort+":"+svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort)+"> "+winningNationLong)
 
 					_, err = s.ChannelMessageEditEmbed(logSpChannelID, logSpMessageID, embed)
 					if err != nil {
@@ -292,28 +257,8 @@ func HandleSpLogMessage(svc Service) func(s *discordgo.Session, i *discordgo.Int
 							spHistory = true
 						}
 
-						embed := &discordgo.MessageEmbed{
-							Author: &discordgo.MessageEmbedAuthor{},
-							Color:  0x000000,
-							Title:  "STRATEGIC POINT HISTORY",
-							Fields: []*discordgo.MessageEmbedField{
-								{
-									Name:   "Map: ",
-									Value:  "----------",
-									Inline: true,
-								},
-								{
-									Name:   "Spawn Time: ",
-									Value:  "----------",
-									Inline: true,
-								},
-								{
-									Name:   "Winning Nation: ",
-									Value:  "----------",
-									Inline: true,
-								},
-							},
-						}
+						embed := CreateSPHistoryEmbed("----------", "----------", "----------")
+
 						em, err := s.ChannelMessageSendEmbed(i.ChannelID, embed)
 						if err != nil {
 							fmt.Println(err)
@@ -338,6 +283,35 @@ func HandleSpLogMessage(svc Service) func(s *discordgo.Session, i *discordgo.Int
 	}
 }
 
+func ServerStatusInteractionResponse(s *discordgo.Session, i *discordgo.InteractionCreate, name, content string) {
+	channel, err := s.Channel(i.ChannelID)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	serverStatusChannelID = i.ChannelID
+	editChannel := discordgo.ChannelEdit{
+		Name:     name,
+		Position: channel.Position,
+	}
+	_, err = s.ChannelEdit(i.ChannelID, &editChannel)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+		Type: discordgo.InteractionResponseChannelMessageWithSource,
+		Data: &discordgo.InteractionResponseData{
+			Content: content,
+			Flags:   discordgo.MessageFlagsEphemeral,
+		},
+	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+}
+
 func HandleServerStatus() func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 	return func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		perms, err := s.UserChannelPermissions(i.Member.User.ID, i.ChannelID)
@@ -347,36 +321,11 @@ func HandleServerStatus() func(s *discordgo.Session, i *discordgo.InteractionCre
 		}
 
 		if perms&discordgo.PermissionAdministrator != 0 {
-			channel, err := s.Channel(i.ChannelID)
-			if err != nil {
-				return
-			}
-
 			switch i.Type {
 			case discordgo.InteractionApplicationCommand:
 				{
 					if i.ApplicationCommandData().Name == "server-online" {
-						serverStatusChannelID = i.ChannelID
-						editChannel := discordgo.ChannelEdit{
-							Name:     " 🟢┃game-info",
-							Position: channel.Position,
-						}
-						_, err := s.ChannelEdit(i.ChannelID, &editChannel)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-							Type: discordgo.InteractionResponseChannelMessageWithSource,
-							Data: &discordgo.InteractionResponseData{
-								Content: "You changed channel name to 🟢┃game-info",
-								Flags:   discordgo.MessageFlagsEphemeral,
-							},
-						})
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
+						ServerStatusInteractionResponse(s, i, "🟢┃game-info", "You changed channel name to 🟢┃game-info")
 
 						message, err := s.ChannelMessageSend(serverStatusChannelID, "<t:"+strconv.Itoa(int(time.Now().Unix()))+":R> 🟢 **"+i.ApplicationCommandData().Options[0].StringValue()+"**")
 						if err != nil {
@@ -398,27 +347,7 @@ func HandleServerStatus() func(s *discordgo.Session, i *discordgo.InteractionCre
 						}
 					}
 					if i.ApplicationCommandData().Name == "server-offline" {
-						serverStatusChannelID = i.ChannelID
-						editChannel := discordgo.ChannelEdit{
-							Name:     "🔴┃game-info❕",
-							Position: channel.Position,
-						}
-						_, err := s.ChannelEdit(i.ChannelID, &editChannel)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-							Type: discordgo.InteractionResponseChannelMessageWithSource,
-							Data: &discordgo.InteractionResponseData{
-								Content: "You changed channel name to 🔴┃game-info❕",
-								Flags:   discordgo.MessageFlagsEphemeral,
-							},
-						})
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
+						ServerStatusInteractionResponse(s, i, "🔴┃game-info❕", "You changed channel name to 🔴┃game-info❕")
 
 						message, err := s.ChannelMessageSend(serverStatusChannelID, "<t:"+strconv.Itoa(int(time.Now().Unix()))+":R>🔴 **"+i.ApplicationCommandData().Options[0].StringValue()+"**")
 						if err != nil {
@@ -441,27 +370,7 @@ func HandleServerStatus() func(s *discordgo.Session, i *discordgo.InteractionCre
 
 					}
 					if i.ApplicationCommandData().Name == "server-maint" {
-						serverStatusChannelID = i.ChannelID
-						editChannel := discordgo.ChannelEdit{
-							Name:     "🟠┃game-info❕",
-							Position: channel.Position,
-						}
-						_, err := s.ChannelEdit(i.ChannelID, &editChannel)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-							Type: discordgo.InteractionResponseChannelMessageWithSource,
-							Data: &discordgo.InteractionResponseData{
-								Content: "You changed channel name to 🟠┃game-info❕",
-								Flags:   discordgo.MessageFlagsEphemeral,
-							},
-						})
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
+						ServerStatusInteractionResponse(s, i, "🟠┃game-info❕", "You changed channel name to 🟠┃game-info❕")
 
 						message, err := s.ChannelMessageSend(serverStatusChannelID, "<t:"+strconv.Itoa(int(time.Now().Unix()))+":R> 🟠 **"+i.ApplicationCommandData().Options[0].StringValue()+"**")
 						if err != nil {
