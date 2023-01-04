@@ -3,7 +3,6 @@ package main
 import (
 	"GOdiscordBOT/app/Commands"
 	"GOdiscordBOT/app/Guild"
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -11,10 +10,12 @@ import (
 	"syscall"
 	"time"
 
+	"database/sql"
+
 	"github.com/bwmarrin/discordgo"
 	_ "github.com/bwmarrin/discordgo"
-	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/joho/godotenv"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var token string
@@ -26,6 +27,7 @@ func main() {
 		return
 	}
 	time.Local = loc
+
 	// Loading environment variables
 	err = godotenv.Load()
 	if err != nil {
@@ -33,22 +35,18 @@ func main() {
 		log.Fatalf("Error loading .env file")
 	}
 
-	// Database connection string
-	dbURI := fmt.Sprintf("host=%s user=%s dbname=%s sslmode=disable password=%s port=%s",
-		os.Getenv("HOST"), os.Getenv("USER"), os.Getenv("NAME"), os.Getenv("PASSWORD"), os.Getenv("DBPORT"))
-
 	// Opening connection to database
-	conn, err := pgxpool.Connect(context.Background(), dbURI)
+	conn, err := sql.Open("sqlite3", "./UWSbot")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
+		fmt.Println(err)
+		return
 	}
 	defer conn.Close()
 
 	// Development token
 	token = os.Getenv("DEVELOPMENTTOKEN")
 	// Deploy token (UWS)
-	// token := os.Getenv("UWSTOKEN")
+	//token := os.Getenv("UWSTOKEN")
 
 	// Create a new Discord session using the provided token
 	bot, err := discordgo.New("Bot " + token)

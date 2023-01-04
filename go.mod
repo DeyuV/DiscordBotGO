@@ -8,6 +8,8 @@ require (
 	github.com/joho/godotenv v1.4.0
 )
 
+require github.com/mattn/go-sqlite3 v1.14.16 // indirect
+
 require (
 	github.com/gofrs/uuid v4.3.1+incompatible // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect

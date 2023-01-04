@@ -29,66 +29,66 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			return
 		}
 
-		if perms&discordgo.PermissionAdministrator != 0 {
-			if aniMenuOption == nil {
-				for _, m := range ANImaps {
-					aniMenuOption = append(aniMenuOption, discordgo.SelectMenuOption{
-						Label:       m,
-						Value:       m,
-						Description: "strategic point",
-						Emoji: discordgo.ComponentEmoji{
-							Name:     strings.ReplaceAll(m, " ", ""),
-							ID:       svc.GetEmojiByName(context.Background(), i.GuildID, strings.ReplaceAll(m, " ", "")),
-							Animated: false,
-						},
-						Default: false,
-					})
-				}
-
-				aniResponseData = []discordgo.MessageComponent{
-					discordgo.ActionsRow{
-						Components: []discordgo.MessageComponent{
-							discordgo.SelectMenu{
-								CustomID:    "ani-sp",
-								Placeholder: "Select ANI strategic point",
-								Options:     aniMenuOption,
-							},
-						},
+		if aniMenuOption == nil {
+			for _, m := range ANImaps {
+				aniMenuOption = append(aniMenuOption, discordgo.SelectMenuOption{
+					Label:       m,
+					Value:       m,
+					Description: "strategic point",
+					Emoji: discordgo.ComponentEmoji{
+						Name:     strings.ReplaceAll(m, " ", ""),
+						ID:       svc.GetEmojiByName(context.Background(), i.GuildID, strings.ReplaceAll(m, " ", "")),
+						Animated: false,
 					},
-				}
+					Default: false,
+				})
 			}
 
-			if bcuMenuOption == nil {
-				for _, m := range BCUmaps {
-					bcuMenuOption = append(bcuMenuOption, discordgo.SelectMenuOption{
-						Label:       m,
-						Value:       m,
-						Description: "strategic point",
-						Emoji: discordgo.ComponentEmoji{
-							Name:     strings.ReplaceAll(m, " ", ""),
-							ID:       svc.GetEmojiByName(context.Background(), i.GuildID, strings.ReplaceAll(m, " ", "")),
-							Animated: false,
-						},
-						Default: false,
-					})
-				}
-
-				bcuResponseData = []discordgo.MessageComponent{
-					discordgo.ActionsRow{
-						Components: []discordgo.MessageComponent{
-							discordgo.SelectMenu{
-								CustomID:    "bcu-sp",
-								Placeholder: "Select BCU strategic point",
-								Options:     bcuMenuOption,
-							},
+			aniResponseData = []discordgo.MessageComponent{
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.SelectMenu{
+							CustomID:    "ani-sp",
+							Placeholder: "Select ANI strategic point",
+							Options:     aniMenuOption,
 						},
 					},
-				}
+				},
+			}
+		}
+
+		if bcuMenuOption == nil {
+			for _, m := range BCUmaps {
+				bcuMenuOption = append(bcuMenuOption, discordgo.SelectMenuOption{
+					Label:       m,
+					Value:       m,
+					Description: "strategic point",
+					Emoji: discordgo.ComponentEmoji{
+						Name:     strings.ReplaceAll(m, " ", ""),
+						ID:       svc.GetEmojiByName(context.Background(), i.GuildID, strings.ReplaceAll(m, " ", "")),
+						Animated: false,
+					},
+					Default: false,
+				})
 			}
 
-			switch i.Type {
-			case discordgo.InteractionApplicationCommand:
-				{
+			bcuResponseData = []discordgo.MessageComponent{
+				discordgo.ActionsRow{
+					Components: []discordgo.MessageComponent{
+						discordgo.SelectMenu{
+							CustomID:    "bcu-sp",
+							Placeholder: "Select BCU strategic point",
+							Options:     bcuMenuOption,
+						},
+					},
+				},
+			}
+		}
+
+		switch i.Type {
+		case discordgo.InteractionApplicationCommand:
+			{
+				if perms&discordgo.PermissionAdministrator != 0 {
 					if i.ApplicationCommandData().Name == "ani-sp" {
 						spChannelID = i.ChannelID
 						err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -138,135 +138,159 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 						bcuMenuID = messageComplex.ID
 					}
 				}
-			case discordgo.InteractionMessageComponent:
-				{
-					if i.Message.ID == aniMenuID || i.Message.ID == bcuMenuID {
-						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-							Type: discordgo.InteractionResponseModal,
-							Data: &discordgo.InteractionResponseData{
-								CustomID: i.MessageComponentData().Values[0],
-								Title:    "SP Time",
-								Components: []discordgo.MessageComponent{
-									discordgo.ActionsRow{
-										Components: []discordgo.MessageComponent{
-											discordgo.TextInput{
-												CustomID:    "TIME",
-												Label:       "TIME",
-												Style:       discordgo.TextInputShort,
-												Placeholder: "Insert time",
-												Required:    true,
-												MaxLength:   2,
-												MinLength:   1,
-											},
+			}
+		case discordgo.InteractionMessageComponent:
+			{
+				if i.Message.ID == aniMenuID || i.Message.ID == bcuMenuID {
+					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+						Type: discordgo.InteractionResponseModal,
+						Data: &discordgo.InteractionResponseData{
+							CustomID: i.MessageComponentData().Values[0],
+							Title:    "SP Time",
+							Components: []discordgo.MessageComponent{
+								discordgo.ActionsRow{
+									Components: []discordgo.MessageComponent{
+										discordgo.TextInput{
+											CustomID:    "TIME",
+											Label:       "TIME",
+											Style:       discordgo.TextInputShort,
+											Placeholder: "Insert time",
+											Required:    true,
+											MaxLength:   2,
+											MinLength:   1,
 										},
 									},
-									discordgo.ActionsRow{
-										Components: []discordgo.MessageComponent{
-											discordgo.TextInput{
-												CustomID:  "MAP",
-												Label:     "MAP",
-												Style:     discordgo.TextInputShort,
-												Value:     i.MessageComponentData().Values[0],
-												Required:  false,
-												MaxLength: 2000,
-											},
+								},
+								discordgo.ActionsRow{
+									Components: []discordgo.MessageComponent{
+										discordgo.TextInput{
+											CustomID:  "MAP",
+											Label:     "MAP",
+											Style:     discordgo.TextInputShort,
+											Value:     i.MessageComponentData().Values[0],
+											Required:  false,
+											MaxLength: 2000,
 										},
 									},
 								},
 							},
-						})
-
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-					}
-					if i.Message.ID == aniMenuID {
-						_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{Components: &aniResponseData})
-						if err != nil {
-							return
-						}
-					}
-					if i.Message.ID == bcuMenuID {
-						_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{Components: &bcuResponseData})
-						if err != nil {
-							return
-						}
-					}
-				}
-			case discordgo.InteractionModalSubmit:
-				{
-					t, err := strconv.Atoi(i.ModalSubmitData().Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value)
-					if err != nil || t > 60 {
-						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-							Type: discordgo.InteractionResponseChannelMessageWithSource,
-							Data: &discordgo.InteractionResponseData{
-								Content: "Please insert a number bellow 61",
-							},
-						})
-						return
-					}
-
-					ani := false
-					for _, m := range ANImaps {
-						if m == i.ModalSubmitData().CustomID {
-							ani = true
-						}
-					}
-
-					var color int
-					if ani {
-						color = 0x00FFFF
-					} else {
-						color = 0xFFA500
-					}
-
-					embed := &discordgo.MessageEmbed{
-						Author: &discordgo.MessageEmbedAuthor{},
-						Color:  color,
-						Title:  "A strategic point has been created!",
-						Fields: []*discordgo.MessageEmbedField{
-							{
-								Name:   "Map: ",
-								Value:  i.ModalSubmitData().CustomID,
-								Inline: true,
-							},
-							{
-								Name:   "Time remaining: ",
-								Value:  i.ModalSubmitData().Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value + " minutes",
-								Inline: true,
-							},
-						},
-						Thumbnail: &discordgo.MessageEmbedThumbnail{
-							URL: svc.GetImageURL(i.ModalSubmitData().CustomID),
-						},
-					}
-
-					roles, err := s.GuildRoles(i.GuildID)
-					if err != nil {
-						return
-					}
-
-					var mentionRole string
-					for _, role := range roles {
-						if role.Name == "SP Notifications" {
-							mentionRole = role.Mention()
-						}
-					}
-
-					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-						Type: discordgo.InteractionResponseChannelMessageWithSource,
-						Data: &discordgo.InteractionResponseData{
-							CustomID: "SP Notification",
-							Content:  mentionRole,
-							Embeds:   []*discordgo.MessageEmbed{embed},
 						},
 					})
 
 					if err != nil {
-						fmt.Println("Failed modal submit")
 						fmt.Println(err)
+						return
 					}
+				}
+				if i.Message.ID == aniMenuID {
+					_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{Components: &aniResponseData})
+					if err != nil {
+						return
+					}
+				}
+				if i.Message.ID == bcuMenuID {
+					_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{Components: &bcuResponseData})
+					if err != nil {
+						return
+					}
+				}
+			}
+		case discordgo.InteractionModalSubmit:
+			{
+				t, err := strconv.Atoi(i.ModalSubmitData().Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value)
+				if err != nil || t > 60 {
+					err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+						Type: discordgo.InteractionResponseChannelMessageWithSource,
+						Data: &discordgo.InteractionResponseData{
+							Content: i.Member.Mention() + " Please insert a number below 61",
+						},
+					})
+					return
+				}
+
+				ani := false
+				for _, m := range ANImaps {
+					if m == i.ModalSubmitData().CustomID {
+						ani = true
+					}
+				}
+
+				var color int
+				if ani {
+					color = 0x00FFFF
+				} else {
+					color = 0xFFA500
+				}
+
+				embed := &discordgo.MessageEmbed{
+					Author: &discordgo.MessageEmbedAuthor{},
+					Color:  color,
+					Title:  "A strategic point has been created!",
+					Fields: []*discordgo.MessageEmbedField{
+						{
+							Name:   "Map: ",
+							Value:  i.ModalSubmitData().CustomID,
+							Inline: true,
+						},
+						{
+							Name:   "Time remaining: ",
+							Value:  i.ModalSubmitData().Components[0].(*discordgo.ActionsRow).Components[0].(*discordgo.TextInput).Value + " minutes",
+							Inline: true,
+						},
+					},
+					Thumbnail: &discordgo.MessageEmbedThumbnail{
+						URL: svc.GetImageURL(i.ModalSubmitData().CustomID),
+					},
+				}
+
+				roles, err := s.GuildRoles(i.GuildID)
+				if err != nil {
+					return
+				}
+
+				var mentionRole string
+				for _, role := range roles {
+					if role.Name == "SP Notifications" {
+						mentionRole = role.Mention()
+					}
+				}
+				wonEmoji := discordgo.Emoji{
+					ID:       svc.GetEmojiByName(context.Background(), i.GuildID, "won"),
+					Name:     "won",
+					Animated: false,
+				}
+
+				lostEmoji := discordgo.Emoji{
+					ID:       svc.GetEmojiByName(context.Background(), i.GuildID, "lost"),
+					Name:     "lost",
+					Animated: false,
+				}
+
+				dislikeEmoji := discordgo.Emoji{
+					ID:       svc.GetEmojiByName(context.Background(), i.GuildID, "dislike"),
+					Name:     "dislike",
+					Animated: false,
+				}
+
+				s.ChannelMessageSendComplex(spChannelID, &discordgo.MessageSend{
+					Content: mentionRole,
+					Embed:   embed,
+				})
+
+				err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+					Type: discordgo.InteractionResponseChannelMessageWithSource,
+					Data: &discordgo.InteractionResponseData{
+						Content: "**Click the following icons once the SP has finished:**\n" +
+							wonEmoji.MessageFormat() + " - We have won this SP\n" +
+							lostEmoji.MessageFormat() + " - We have lost this SP\n" +
+							dislikeEmoji.MessageFormat() + " - Cancel SP (mistakes only)",
+						Flags: discordgo.MessageFlagsEphemeral,
+					},
+				})
+
+				if err != nil {
+					fmt.Println("Failed modal submit")
+					fmt.Println(err)
 				}
 			}
 		}

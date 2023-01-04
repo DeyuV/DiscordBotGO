@@ -2,18 +2,17 @@ package Commands
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v4/pgxpool"
+	"database/sql"
 )
 
-func NewRepository(db *pgxpool.Pool) Repository {
+func NewRepository(db *sql.DB) Repository {
 	return &repositoryImpl{db: db}
 }
 
 func (r *repositoryImpl) GetEmojiByName(ctx context.Context, guildId, emojiName string) string {
 	var emojiId string
 
-	err := r.db.QueryRow(ctx, `SELECT emojiid FROM guildemojis WHERE guildid = $1 AND emojiname = $2`, guildId, emojiName).Scan(&emojiId)
+	err := r.db.QueryRowContext(ctx, `SELECT emojiid FROM guildemojis WHERE guildid = ? AND emojiname = ?`, guildId, emojiName).Scan(&emojiId)
 	if err != nil {
 		return ""
 	}
@@ -21,5 +20,5 @@ func (r *repositoryImpl) GetEmojiByName(ctx context.Context, guildId, emojiName 
 }
 
 type repositoryImpl struct {
-	db *pgxpool.Pool
+	db *sql.DB
 }

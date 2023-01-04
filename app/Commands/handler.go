@@ -84,9 +84,9 @@ func InitResetSpLog(s *discordgo.Session) {
 func HandleSpNotification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCreate) {
 	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if m.Author.ID == s.State.User.ID {
-			if m.Content == "Please insert a number bellow 61" {
+			if len(m.Content) > len("Please insert a number below 61") && strings.SplitN(m.Content, " ", 2)[1] == "Please insert a number bellow 61" {
 				go func() {
-					time.Sleep(10 * time.Second)
+					time.Sleep(1 * time.Minute)
 					err := s.ChannelMessageDelete(m.ChannelID, m.ID)
 					if err != nil {
 						return
@@ -186,7 +186,7 @@ func HandleSpNotification(svc Service) func(s *discordgo.Session, m *discordgo.M
 func HandleSpNotificationReactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
 	return func(s *discordgo.Session, m *discordgo.MessageReactionAdd) {
 		if m.Member.User.ID != s.State.User.ID {
-			if m.ChannelID == "1039910012228747375" {
+			if m.ChannelID == spChannelID {
 				if m.Emoji.Name == "dislike" {
 					err := s.ChannelMessageDelete(m.ChannelID, m.MessageID)
 					if err != nil {

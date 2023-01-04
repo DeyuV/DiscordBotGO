@@ -42,7 +42,7 @@ func (s *serviceImplementation) GetImageURL(mapName string) string {
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/vnd.uploadcare-v0.7+json")
-	req.Header.Add("Authorization", "Uploadcare.Simple "+os.Getenv("PUBLICAPIKEY")+":"+os.Getenv("PRIVATEAPIKEY"))
+	req.Header.Add("Authorization", "Uploadcare.Simple "+"f7aa697d6a288f1e5785"+":"+"a9a0c1ad68914b2bf65c")
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
