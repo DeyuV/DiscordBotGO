@@ -1,4 +1,4 @@
-package Guild
+package guild
 
 import (
 	"context"
@@ -17,13 +17,6 @@ type Service interface {
 	DeleteGuildEmojis(ctx context.Context, guildId string) error
 }
 
-// Uncoment to delete all slash commands
-/*for _, v := range registeredCommands {
-	err := s.ApplicationCommandDelete(s.State.User.ID, guild.ID, v.ID)
-	if err != nil {
-		log.Panicf("Cannot delete '%v' command: %v", v.Name, err)
-	}
-}*/
 // AddGuild Adds a guild on database when bot creates the guilds where it is a member or when invited
 func AddGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildCreate) {
 	return func(s *discordgo.Session, c *discordgo.GuildCreate) {
@@ -57,6 +50,15 @@ func AddGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildCreate) 
 				name := slashCommand.Command.CommandName
 				description := slashCommand.Command.CommandDescription
 				if name == "server-online" || name == "server-offline" || name == "server-maint" {
+					switch name {
+					case "server-online":
+						description = "Set channel name to 🟢┃game-info + custom message"
+					case "server-offline":
+						description = "Set channel name to 🔴┃game-info❕ + custom message"
+					case "server-maint":
+						description = "Set channel name to 🟠┃game-info❕ + custom message"
+					}
+
 					command = discordgo.ApplicationCommand{
 						Name:        name,
 						Description: description,
@@ -69,16 +71,90 @@ func AddGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildCreate) 
 							},
 						},
 					}
-				} else {
+				}
+
+				switch name {
+				case "add-sp":
+					command = discordgo.ApplicationCommand{
+						Name:        name,
+						Description: description,
+						Options: []*discordgo.ApplicationCommandOption{
+							{
+								Type:        discordgo.ApplicationCommandOptionString,
+								Name:        "map-name",
+								Description: "Input full map name",
+								Required:    true,
+							},
+							{
+								Type:        discordgo.ApplicationCommandOptionString,
+								Name:        "spawn-time",
+								Description: "Input in format <t:(unix):R>",
+								Required:    true,
+							},
+							{
+								Type:        discordgo.ApplicationCommandOptionString,
+								Name:        "winning-nation",
+								Description: "Input short name of winning nation (ani/bcu)",
+								Required:    true,
+							},
+						},
+					}
+				case "modify-sp":
+					command = discordgo.ApplicationCommand{
+						Name:        name,
+						Description: description,
+						Options: []*discordgo.ApplicationCommandOption{
+							{
+								Type:        discordgo.ApplicationCommandOptionString,
+								Name:        "id",
+								Description: "Input SP id",
+								Required:    true,
+							},
+							{
+								Type:        discordgo.ApplicationCommandOptionString,
+								Name:        "map-name",
+								Description: "Input full map name",
+								Required:    true,
+							},
+							{
+								Type:        discordgo.ApplicationCommandOptionString,
+								Name:        "spawn-time",
+								Description: "Input in format <t:(unix):R>",
+								Required:    true,
+							},
+							{
+								Type:        discordgo.ApplicationCommandOptionString,
+								Name:        "winning-nation",
+								Description: "Input short name of winning nation (ani/bcu)",
+								Required:    true,
+							},
+						},
+					}
+				case "delete-sp":
+					command = discordgo.ApplicationCommand{
+						Name:        name,
+						Description: description,
+						Options: []*discordgo.ApplicationCommandOption{
+							{
+								Type:        discordgo.ApplicationCommandOptionString,
+								Name:        "id",
+								Description: "Input SP id",
+								Required:    true,
+							},
+						},
+					}
+				default:
 					command = discordgo.ApplicationCommand{Name: name, Description: description}
 				}
+
 				commands = append(commands, &command)
 			}
 			registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
+
 			for i, v := range commands {
 				cmd, err := s.ApplicationCommandCreate(s.State.User.ID, c.ID, v)
 				if err != nil {
-					fmt.Println("Failed to create slash commands")
+					fmt.Println("Failed to create slash commands for " + c.Name)
 					fmt.Println(err)
 				}
 				registeredCommands[i] = cmd
@@ -87,15 +163,15 @@ func AddGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildCreate) 
 			for _, emoji := range c.Emojis {
 				err := svc.AddGuildEmojis(context.Background(), c.ID, emoji.ID, emoji.Name, emoji.Animated)
 				if err != nil {
-					fmt.Println("Failed to add emoji")
+					fmt.Println("Failed to add emoji for " + c.Name)
 					fmt.Println(err)
 					return
 				}
 			}
+
 			fmt.Println("Successfully added guild: " + c.Name)
 		}
 	}
-
 }
 
 // DeleteGuild Deletes a guild from database when bot leaves a guild
@@ -103,7 +179,7 @@ func DeleteGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildDelet
 	return func(s *discordgo.Session, c *discordgo.GuildDelete) {
 		err := svc.DeleteGuild(context.Background(), c.ID)
 		if err != nil {
-			fmt.Println("Failed to delete guild: " + c.Name)
+			fmt.Println("Failed to delete guild")
 			return
 		}
 	}

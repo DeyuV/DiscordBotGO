@@ -1,4 +1,4 @@
-package Guild
+package guild
 
 import (
 	"context"
@@ -94,6 +94,7 @@ func (r *repositoryImpl) GetById(ctx context.Context, guildId string) (*Guilds, 
 }
 
 func (r *repositoryImpl) DeleteGuild(ctx context.Context, guildId string) error {
+	r.db.ExecContext(context.Background(), `PRAGMA foreign_keys = ON`)
 	_, err := r.db.ExecContext(ctx, `DELETE FROM guilds WHERE id = ?`, guildId)
 
 	return err

@@ -1,8 +1,11 @@
 package main
 
 import (
-	"GOdiscordBOT/app/Commands"
-	"GOdiscordBOT/app/Guild"
+	"GOdiscordBOT/app/guild"
+	"GOdiscordBOT/app/serverstatus"
+	"GOdiscordBOT/app/settings"
+	"GOdiscordBOT/app/strategicpoint"
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -13,12 +16,9 @@ import (
 	"database/sql"
 
 	"github.com/bwmarrin/discordgo"
-	_ "github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 )
-
-var token string
 
 func main() {
 	loc, err := time.LoadLocation("America/Antigua")
@@ -43,8 +43,11 @@ func main() {
 	}
 	defer conn.Close()
 
+	// Enable foreign keys at runtime
+	conn.ExecContext(context.Background(), `PRAGMA foreign_keys = ON`)
+
 	// Development token
-	token = os.Getenv("DEVELOPMENTTOKEN")
+	token := os.Getenv("DEVELOPMENTTOKEN")
 	// Deploy token (UWS)
 	//token := os.Getenv("UWSTOKEN")
 
@@ -65,16 +68,22 @@ func main() {
 			discordgo.IntentGuildEmojis
 
 	// Repositories
-	guildRepo := Guild.NewRepository(conn)
-	commandsRepo := Commands.NewRepository(conn)
+	guildRepo := guild.NewRepository(conn)
+	serverstatusRepo := serverstatus.NewRepository(conn)
+	strategicpointRepo := strategicpoint.NewRepository(conn)
+	settingsRepo := settings.NewRepository(conn)
 
 	// Services
-	guildService := Guild.NewService(guildRepo)
-	commandsService := Commands.NewService(commandsRepo)
+	guildService := guild.NewService(guildRepo)
+	serverstatusService := serverstatus.NewService(serverstatusRepo)
+	strategicpointService := strategicpoint.NewService(strategicpointRepo)
+	settingsService := settings.NewService(settingsRepo)
 
 	// Handlers
-	Guild.Register(bot, guildService)
-	Commands.Register(bot, commandsService)
+	guild.Register(bot, guildService)
+	serverstatus.Register(bot, serverstatusService)
+	strategicpoint.Register(bot, strategicpointService)
+	settings.Register(bot, settingsService)
 
 	// Open connection to discord and start listening
 	err = bot.Open()
@@ -86,7 +95,7 @@ func main() {
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
 
 	// Close Discord session

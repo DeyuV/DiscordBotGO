@@ -1,4 +1,4 @@
-package Guild
+package guild
 
 // Guilds table name 'guilds' store every guild, and they're features status
 type Guilds struct {
