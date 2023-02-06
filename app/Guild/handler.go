@@ -187,6 +187,7 @@ func DeleteGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildDelet
 
 func EmojiUpdate(svc Service) func(s *discordgo.Session, c *discordgo.GuildEmojisUpdate) {
 	return func(s *discordgo.Session, c *discordgo.GuildEmojisUpdate) {
+		// Maybe there is a better way to do this
 		err := svc.DeleteGuildEmojis(context.Background(), c.GuildID)
 		if err != nil {
 			fmt.Println("Failed to delete emojis")

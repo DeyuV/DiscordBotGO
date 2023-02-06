@@ -1,6 +1,7 @@
 package strategicpoint
 
 import (
+	"GOdiscordBOT/pkg/config"
 	"context"
 	"encoding/json"
 	"errors"
@@ -109,15 +110,15 @@ func (s *serviceImplementation) AdminLogEmbed(mapValue, timeValue, nationValue, 
 }
 
 func (s *serviceImplementation) ResetLog(session *discordgo.Session, guildId string) {
-	embed := s.LogEmbed("----------", "----------", "----------")
+	embed := s.LogEmbed(config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue)
 
-	logSpChannelID, err := s.repo.GetChannelIdByNameAndGuildID(context.Background(), guildId, "logSP")
+	logSpChannelID, err := s.repo.GetChannelIdByNameAndGuildID(context.Background(), guildId, config.LogStrategicpoint)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	logSpMessageID, err := s.repo.GetMessageIdByNameAndGuildID(context.Background(), guildId, "logSP")
+	logSpMessageID, err := s.repo.GetMessageIdByNameAndGuildID(context.Background(), guildId, config.LogStrategicpoint)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -147,8 +148,7 @@ func (s *serviceImplementation) InitResetLog(session *discordgo.Session) {
 }
 
 func (s *serviceImplementation) GetImageURL(mapName string) string {
-	requestURL := "https://api.uploadcare.com/files/"
-	req, err := http.NewRequest(http.MethodGet, requestURL, nil)
+	req, err := http.NewRequest(http.MethodGet, config.UploadCareRequestURL, nil)
 	if err != nil {
 		fmt.Printf("client: could not create request: %s\n", err)
 		os.Exit(1)
@@ -156,7 +156,7 @@ func (s *serviceImplementation) GetImageURL(mapName string) string {
 
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("Accept", "application/vnd.uploadcare-v0.7+json")
-	req.Header.Add("Authorization", "Uploadcare.Simple "+"f7aa697d6a288f1e5785"+":"+"a9a0c1ad68914b2bf65c")
+	req.Header.Add("Authorization", "Uploadcare.Simple "+os.Getenv("PUBLICAPIKEY")+":"+os.Getenv("PRIVATEAPIKEY"))
 
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -234,22 +234,22 @@ func (s *serviceImplementation) RefreshLog(ctx context.Context, guildId string) 
 			concatSpLogs.UserInteracting += sp.UserInteracting + "\n"
 
 			if sp.WinningNation == "ani" {
-				concatSpLogs.WinningNation += "<:" + sp.WinningNation + ":" + s.GetEmojiByName(context.Background(), guildId, sp.WinningNation) + "> Arlington National Influence\n"
+				concatSpLogs.WinningNation += "<:" + sp.WinningNation + ":" + s.GetEmojiByName(context.Background(), guildId, sp.WinningNation) + ">" + config.ANIlongName + "\n"
 			}
 
 			if sp.WinningNation == "bcu" {
-				concatSpLogs.WinningNation += "<:" + sp.WinningNation + ":" + s.GetEmojiByName(context.Background(), guildId, sp.WinningNation) + "> Bygeniou City United\n"
+				concatSpLogs.WinningNation += "<:" + sp.WinningNation + ":" + s.GetEmojiByName(context.Background(), guildId, sp.WinningNation) + ">" + config.BCUlongName + "\n"
 			}
 		}
 	}
 
 	if concatSpLogs.MapName == "" {
-		concatSpLogs.ID = "-"
-		concatSpLogs.MapName = "-"
-		concatSpLogs.SpawnTime = "-"
-		concatSpLogs.UserSpawning = "-"
-		concatSpLogs.UserInteracting = "-"
-		concatSpLogs.WinningNation = "-"
+		concatSpLogs.ID = config.EmptyEmbedFieldValue
+		concatSpLogs.MapName = config.EmptyEmbedFieldValue
+		concatSpLogs.SpawnTime = config.EmptyEmbedFieldValue
+		concatSpLogs.UserSpawning = config.EmptyEmbedFieldValue
+		concatSpLogs.UserInteracting = config.EmptyEmbedFieldValue
+		concatSpLogs.WinningNation = config.EmptyEmbedFieldValue
 	}
 
 	membersEmbed := s.LogEmbed(concatSpLogs.MapName, concatSpLogs.SpawnTime, concatSpLogs.WinningNation)

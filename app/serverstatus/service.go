@@ -1,6 +1,7 @@
 package serverstatus
 
 import (
+	"GOdiscordBOT/pkg/config"
 	"context"
 	"errors"
 
@@ -27,7 +28,7 @@ type serviceImplementation struct {
 }
 
 func (s *serviceImplementation) InteractionResponse(session *discordgo.Session, i *discordgo.InteractionCreate, name, content string) error {
-	serverStatusChannelId, err := s.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "serverStatus")
+	serverStatusChannelId, err := s.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.ServerStatus)
 	if err != nil {
 		return err
 	}

@@ -1,6 +1,7 @@
 package serverstatus
 
 import (
+	"GOdiscordBOT/pkg/config"
 	"context"
 	"database/sql"
 	"fmt"
@@ -42,7 +43,7 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							return
 						}
 
-						serverStatusChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "serverStatus")
+						serverStatusChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.ServerStatus)
 						if err != nil {
 							fmt.Println(err)
 							return
@@ -54,7 +55,7 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							return
 						}
 
-						err = svc.StrikethroughMessage(s, i, "serverOnline", serverStatusChannelID)
+						err = svc.StrikethroughMessage(s, i, config.ServerOnline, serverStatusChannelID)
 						if err != nil {
 							if err == sql.ErrNoRows {
 								fmt.Println("server online message does not exist")
@@ -63,10 +64,10 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							}
 						}
 
-						err = svc.AddMessageId(context.Background(), i.GuildID, "serverOnline", message.ID)
+						err = svc.AddMessageId(context.Background(), i.GuildID, config.ServerOnline, message.ID)
 						if err != nil {
 							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateMessageId(context.Background(), i.GuildID, "serverOnline", message.ID)
+								err = svc.UpdateMessageId(context.Background(), i.GuildID, config.ServerOnline, message.ID)
 								if err != nil {
 									fmt.Println(err)
 									return
@@ -74,7 +75,7 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							}
 						}
 
-						err = svc.StrikethroughMessage(s, i, "serverOffline", serverStatusChannelID)
+						err = svc.StrikethroughMessage(s, i, config.ServerOffline, serverStatusChannelID)
 						if err != nil {
 							if err == sql.ErrNoRows {
 								fmt.Println("server offfline message does not exist")
@@ -83,7 +84,7 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							}
 						}
 
-						err = svc.StrikethroughMessage(s, i, "serverMaintenance", serverStatusChannelID)
+						err = svc.StrikethroughMessage(s, i, config.ServerMaintenance, serverStatusChannelID)
 						if err != nil {
 							if err == sql.ErrNoRows {
 								fmt.Println("server maintenance message does not exist")
@@ -100,7 +101,7 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							return
 						}
 
-						serverStatusChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "serverStatus")
+						serverStatusChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.ServerStatus)
 						if err != nil {
 							fmt.Println(err)
 							return
@@ -112,7 +113,7 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							return
 						}
 
-						err = svc.StrikethroughMessage(s, i, "serverOffline", serverStatusChannelID)
+						err = svc.StrikethroughMessage(s, i, config.ServerOffline, serverStatusChannelID)
 						if err != nil {
 							if err == sql.ErrNoRows {
 								fmt.Println("server offfline message does not exist")
@@ -121,10 +122,10 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							}
 						}
 
-						err = svc.AddMessageId(context.Background(), i.GuildID, "serverOffline", message.ID)
+						err = svc.AddMessageId(context.Background(), i.GuildID, config.ServerOffline, message.ID)
 						if err != nil {
 							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateMessageId(context.Background(), i.GuildID, "serverOffline", message.ID)
+								err = svc.UpdateMessageId(context.Background(), i.GuildID, config.ServerOffline, message.ID)
 								if err != nil {
 									fmt.Println(err)
 									return
@@ -132,7 +133,7 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							}
 						}
 
-						err = svc.StrikethroughMessage(s, i, "serverOnline", serverStatusChannelID)
+						err = svc.StrikethroughMessage(s, i, config.ServerOnline, serverStatusChannelID)
 						if err != nil {
 							if err == sql.ErrNoRows {
 								fmt.Println("server online message does not exist")
@@ -141,7 +142,7 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							}
 						}
 
-						err = svc.StrikethroughMessage(s, i, "serverMaintenance", serverStatusChannelID)
+						err = svc.StrikethroughMessage(s, i, config.ServerMaintenance, serverStatusChannelID)
 						if err != nil {
 							if err == sql.ErrNoRows {
 								fmt.Println("server maintenance message does not exist")
@@ -158,7 +159,7 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							return
 						}
 
-						serverStatusChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "serverStatus")
+						serverStatusChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.ServerStatus)
 						if err != nil {
 							fmt.Println(err)
 							return
@@ -170,7 +171,7 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							return
 						}
 
-						err = svc.StrikethroughMessage(s, i, "serverMaintenance", serverStatusChannelID)
+						err = svc.StrikethroughMessage(s, i, config.ServerMaintenance, serverStatusChannelID)
 						if err != nil {
 							if err == sql.ErrNoRows {
 								fmt.Println("server maintenance message does not exist")
@@ -179,10 +180,10 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							}
 						}
 
-						err = svc.AddMessageId(context.Background(), i.GuildID, "serverMaintenance", message.ID)
+						err = svc.AddMessageId(context.Background(), i.GuildID, config.ServerMaintenance, message.ID)
 						if err != nil {
 							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateMessageId(context.Background(), i.GuildID, "serverMaintenance", message.ID)
+								err = svc.UpdateMessageId(context.Background(), i.GuildID, config.ServerMaintenance, message.ID)
 								if err != nil {
 									fmt.Println(err)
 									return
@@ -190,7 +191,7 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							}
 						}
 
-						err = svc.StrikethroughMessage(s, i, "serverOffline", serverStatusChannelID)
+						err = svc.StrikethroughMessage(s, i, config.ServerOffline, serverStatusChannelID)
 						if err != nil {
 							if err == sql.ErrNoRows {
 								fmt.Println("server offfline message does not exist")
@@ -199,7 +200,7 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							}
 						}
 
-						err = svc.StrikethroughMessage(s, i, "serverOnline", serverStatusChannelID)
+						err = svc.StrikethroughMessage(s, i, config.ServerOnline, serverStatusChannelID)
 						if err != nil {
 							if err == sql.ErrNoRows {
 								fmt.Println("server online message does not exist")

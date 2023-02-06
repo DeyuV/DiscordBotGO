@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strings"
 
+	"GOdiscordBOT/pkg/config"
+
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -26,10 +28,10 @@ func SetChannelId(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 			{
 				if perms&discordgo.PermissionAdministrator != 0 {
 					if i.ApplicationCommandData().Name == "set-server-status-channel" {
-						err = svc.AddChannelId(context.Background(), i.GuildID, "serverStatus", i.ChannelID)
+						err = svc.AddChannelId(context.Background(), i.GuildID, config.ServerStatus, i.ChannelID)
 						if err != nil {
 							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateChannelId(context.Background(), i.GuildID, "serverStatus", i.ChannelID)
+								err = svc.UpdateChannelId(context.Background(), i.GuildID, config.ServerStatus, i.ChannelID)
 								if err != nil {
 									fmt.Println(err)
 									return
@@ -52,10 +54,10 @@ func SetChannelId(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 					}
 
 					if i.ApplicationCommandData().Name == "set-sp-channel" {
-						err = svc.AddChannelId(context.Background(), i.GuildID, "SP", i.ChannelID)
+						err = svc.AddChannelId(context.Background(), i.GuildID, config.Strategicpoint, i.ChannelID)
 						if err != nil {
 							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateChannelId(context.Background(), i.GuildID, "SP", i.ChannelID)
+								err = svc.UpdateChannelId(context.Background(), i.GuildID, config.Strategicpoint, i.ChannelID)
 								if err != nil {
 									fmt.Println(err)
 									return
@@ -63,10 +65,10 @@ func SetChannelId(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 							}
 						}
 
-						err = svc.AddChannelId(context.Background(), i.GuildID, "logSP", i.ChannelID)
+						err = svc.AddChannelId(context.Background(), i.GuildID, config.LogStrategicpoint, i.ChannelID)
 						if err != nil {
 							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateChannelId(context.Background(), i.GuildID, "logSP", i.ChannelID)
+								err = svc.UpdateChannelId(context.Background(), i.GuildID, config.LogStrategicpoint, i.ChannelID)
 								if err != nil {
 									fmt.Println(err)
 									return
@@ -89,10 +91,10 @@ func SetChannelId(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 					}
 
 					if i.ApplicationCommandData().Name == "set-admin-sp-channel" {
-						err = svc.AddChannelId(context.Background(), i.GuildID, "adminlogSP", i.ChannelID)
+						err = svc.AddChannelId(context.Background(), i.GuildID, config.AdminLogStrategicpoint, i.ChannelID)
 						if err != nil {
 							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateChannelId(context.Background(), i.GuildID, "adminlogSP", i.ChannelID)
+								err = svc.UpdateChannelId(context.Background(), i.GuildID, config.AdminLogStrategicpoint, i.ChannelID)
 								if err != nil {
 									fmt.Println(err)
 									return

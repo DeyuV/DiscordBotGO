@@ -1,6 +1,7 @@
 package strategicpoint
 
 import (
+	"GOdiscordBOT/pkg/config"
 	"context"
 	"fmt"
 	"strconv"
@@ -131,10 +132,10 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 							fmt.Println(err)
 						}
 
-						err = svc.AddMessageId(context.Background(), i.GuildID, "aniMenu", messageComplex.ID)
+						err = svc.AddMessageId(context.Background(), i.GuildID, config.ANIMenu, messageComplex.ID)
 						if err != nil {
 							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateMessageId(context.Background(), i.GuildID, "aniMenu", messageComplex.ID)
+								err = svc.UpdateMessageId(context.Background(), i.GuildID, config.ANIMenu, messageComplex.ID)
 								if err != nil {
 									fmt.Println(err)
 									return
@@ -164,10 +165,10 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 							fmt.Println("Failed to create BCU menu")
 							fmt.Println(err)
 						}
-						err = svc.AddMessageId(context.Background(), i.GuildID, "bcuMenu", messageComplex.ID)
+						err = svc.AddMessageId(context.Background(), i.GuildID, config.BCUMenu, messageComplex.ID)
 						if err != nil {
 							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateMessageId(context.Background(), i.GuildID, "bcuMenu", messageComplex.ID)
+								err = svc.UpdateMessageId(context.Background(), i.GuildID, config.BCUMenu, messageComplex.ID)
 								if err != nil {
 									fmt.Println(err)
 									return
@@ -179,12 +180,12 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			}
 		case discordgo.InteractionMessageComponent:
 			{
-				aniMenuID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, "aniMenu")
+				aniMenuID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.ANIMenu)
 				if err != nil {
 					fmt.Println(err)
 				}
 
-				bcuMenuID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, "bcuMenu")
+				bcuMenuID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.BCUMenu)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -326,7 +327,7 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 					Animated: false,
 				}
 
-				spChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "SP")
+				spChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.Strategicpoint)
 				if err != nil {
 					fmt.Println(err)
 					return
@@ -358,13 +359,13 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 					fmt.Println(err)
 				}
 
-				adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "adminlogSP")
+				adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
 				if err != nil {
 					fmt.Println(err)
 					return
 				}
 
-				adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, "adminlogSP")
+				adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
 				if err != nil {
 					fmt.Println(err)
 					return
@@ -481,13 +482,13 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 						return
 					}
 
-					logSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), m.GuildID, "logSP")
+					logSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), m.GuildID, config.LogStrategicpoint)
 					if err != nil {
 						fmt.Println(err)
 						return
 					}
 
-					logSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), m.GuildID, "logSP")
+					logSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), m.GuildID, config.LogStrategicpoint)
 					if err != nil {
 						fmt.Println(err)
 						return
@@ -501,11 +502,11 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 					var winningNationShort string
 					var winningNationLong string
 					if m.Embeds[0].Color == 0x00FFFF {
-						winningNationShort = "ani"
-						winningNationLong = "Arlington National Influence"
+						winningNationShort = config.ANIshortName
+						winningNationLong = config.ANIlongName
 					} else {
-						winningNationShort = "bcu"
-						winningNationLong = "Bygeniou City United"
+						winningNationShort = config.BCUshortName
+						winningNationLong = config.BCUlongName
 					}
 
 					membersEmbed := svc.LogEmbed(strings.ReplaceAll(logMessage.Embeds[0].Fields[0].Value, "-", "")+"\n"+mapName,
@@ -518,13 +519,13 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 						return
 					}
 
-					adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), m.GuildID, "adminlogSP")
+					adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), m.GuildID, config.AdminLogStrategicpoint)
 					if err != nil {
 						fmt.Println(err)
 						return
 					}
 
-					adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), m.GuildID, "adminlogSP")
+					adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), m.GuildID, config.AdminLogStrategicpoint)
 					if err != nil {
 						fmt.Println(err)
 						return
@@ -586,13 +587,13 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 						return
 					}
 
-					adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), m.GuildID, "adminlogSP")
+					adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), m.GuildID, config.AdminLogStrategicpoint)
 					if err != nil {
 						fmt.Println(err)
 						return
 					}
 
-					adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), m.GuildID, "adminlogSP")
+					adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), m.GuildID, config.AdminLogStrategicpoint)
 					if err != nil {
 						fmt.Println(err)
 						return
@@ -624,13 +625,13 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 
 				}
 				if m.Emoji.Name == "won" || m.Emoji.Name == "lost" {
-					logSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), m.GuildID, "logSP")
+					logSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), m.GuildID, config.LogStrategicpoint)
 					if err != nil {
 						fmt.Println(err)
 						return
 					}
 
-					logSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), m.GuildID, "logSP")
+					logSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), m.GuildID, config.LogStrategicpoint)
 					if err != nil {
 						fmt.Println(err)
 						return
@@ -644,11 +645,11 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 					var winningNationShort string
 					var winningNationLong string
 					if m.Emoji.Name == "won" {
-						winningNationShort = "ani"
-						winningNationLong = "Arlington National Influence"
+						winningNationShort = config.ANIshortName
+						winningNationLong = config.ANIlongName
 					} else {
-						winningNationShort = "bcu"
-						winningNationLong = "Bygeniou City United"
+						winningNationShort = config.ANIshortName
+						winningNationLong = config.ANIlongName
 					}
 
 					value, _ := strconv.Atoi(strings.Split(message.Embeds[0].Fields[1].Value, " ")[0])
@@ -664,13 +665,13 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 						return
 					}
 
-					adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), m.GuildID, "adminlogSP")
+					adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), m.GuildID, config.AdminLogStrategicpoint)
 					if err != nil {
 						fmt.Println(err)
 						return
 					}
 
-					adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), m.GuildID, "adminlogSP")
+					adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), m.GuildID, config.AdminLogStrategicpoint)
 					if err != nil {
 						fmt.Println(err)
 						return
@@ -725,7 +726,7 @@ func LogMessage(svc Service) func(s *discordgo.Session, i *discordgo.Interaction
 			case discordgo.InteractionApplicationCommand:
 				{
 					if i.ApplicationCommandData().Name == "history-sp" {
-						/* spCommandsChannelId, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "logSP")
+						spCommandsChannelId, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return
@@ -739,18 +740,20 @@ func LogMessage(svc Service) func(s *discordgo.Session, i *discordgo.Interaction
 									Flags:   discordgo.MessageFlagsEphemeral,
 								},
 							})
-						}
-						if err != nil {
-							fmt.Println(err)
+
+							if err != nil {
+								fmt.Println(err)
+								return
+							}
 							return
-						} */
+						}
 
 						if !spHistory {
 							go svc.InitResetLog(s)
 							spHistory = true
 						}
 
-						embed := svc.LogEmbed("----------", "----------", "----------")
+						embed := svc.LogEmbed(config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue)
 
 						em, err := s.ChannelMessageSendEmbed(i.ChannelID, embed)
 						if err != nil {
@@ -758,10 +761,10 @@ func LogMessage(svc Service) func(s *discordgo.Session, i *discordgo.Interaction
 							return
 						}
 
-						err = svc.AddMessageId(context.Background(), i.GuildID, "logSP", em.ID)
+						err = svc.AddMessageId(context.Background(), i.GuildID, config.LogStrategicpoint, em.ID)
 						if err != nil {
 							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateMessageId(context.Background(), i.GuildID, "logSP", em.ID)
+								err = svc.UpdateMessageId(context.Background(), i.GuildID, config.LogStrategicpoint, em.ID)
 								if err != nil {
 									fmt.Println(err)
 									return
@@ -783,7 +786,7 @@ func LogMessage(svc Service) func(s *discordgo.Session, i *discordgo.Interaction
 
 					if i.ApplicationCommandData().Name == "admin-history-sp" {
 
-						embed := svc.AdminLogEmbed("----------", "----------", "----------", "----------", "----------", "----------")
+						embed := svc.AdminLogEmbed(config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue)
 
 						em, err := s.ChannelMessageSendEmbed(i.ChannelID, embed)
 						if err != nil {
@@ -791,10 +794,10 @@ func LogMessage(svc Service) func(s *discordgo.Session, i *discordgo.Interaction
 							return
 						}
 
-						err = svc.AddMessageId(context.Background(), i.GuildID, "adminlogSP", em.ID)
+						err = svc.AddMessageId(context.Background(), i.GuildID, config.AdminLogStrategicpoint, em.ID)
 						if err != nil {
 							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateMessageId(context.Background(), i.GuildID, "adminlogSP", em.ID)
+								err = svc.UpdateMessageId(context.Background(), i.GuildID, config.AdminLogStrategicpoint, em.ID)
 								if err != nil {
 									fmt.Println(err)
 									return
@@ -887,13 +890,13 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							fmt.Println(err)
 						}
 
-						adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "adminlogSP")
+						adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return
 						}
 
-						adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, "adminlogSP")
+						adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return
@@ -905,13 +908,13 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							return
 						}
 
-						membersLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "logSP")
+						membersLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return
 						}
 
-						membersLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, "logSP")
+						membersLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return
@@ -997,13 +1000,13 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							fmt.Println(err)
 						}
 
-						adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "adminlogSP")
+						adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return
 						}
 
-						adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, "adminlogSP")
+						adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return
@@ -1015,13 +1018,13 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							return
 						}
 
-						membersLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "logSP")
+						membersLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return
 						}
 
-						membersLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, "logSP")
+						membersLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return
@@ -1150,13 +1153,13 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							fmt.Println(err)
 						}
 
-						adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "adminlogSP")
+						adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return
 						}
 
-						adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, "adminlogSP")
+						adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return
@@ -1168,13 +1171,13 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							return
 						}
 
-						membersLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, "logSP")
+						membersLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return
 						}
 
-						membersLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, "logSP")
+						membersLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
 						if err != nil {
 							fmt.Println(err)
 							return

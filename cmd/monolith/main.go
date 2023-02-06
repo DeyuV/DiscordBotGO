@@ -5,7 +5,6 @@ import (
 	"GOdiscordBOT/app/serverstatus"
 	"GOdiscordBOT/app/settings"
 	"GOdiscordBOT/app/strategicpoint"
-	"context"
 	"fmt"
 	"log"
 	"os"
@@ -42,9 +41,6 @@ func main() {
 		return
 	}
 	defer conn.Close()
-
-	// Enable foreign keys at runtime
-	conn.ExecContext(context.Background(), `PRAGMA foreign_keys = ON`)
 
 	// Development token
 	token := os.Getenv("DEVELOPMENTTOKEN")
