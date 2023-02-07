@@ -258,6 +258,45 @@ func (s *serviceImplementation) RefreshLog(ctx context.Context, guildId string) 
 	return membersEmbed, adminsEmbed, nil
 }
 
+func (s *serviceImplementation) SendEditedEmbed(ctx context.Context, session *discordgo.Session, guildId string) error {
+	membersEmbed, adminEmbed, err := s.RefreshLog(context.Background(), guildId)
+	if err != nil {
+		return err
+	}
+
+	adminLogSpChannelID, err := s.GetChannelIdByNameAndGuildID(context.Background(), guildId, config.AdminLogStrategicpoint)
+	if err != nil {
+		return err
+	}
+
+	adminLogSpMessageID, err := s.GetMessageIdByNameAndGuildID(context.Background(), guildId, config.AdminLogStrategicpoint)
+	if err != nil {
+		return err
+	}
+
+	_, err = session.ChannelMessageEditEmbed(adminLogSpChannelID, adminLogSpMessageID, adminEmbed)
+	if err != nil {
+		return err
+	}
+
+	membersLogSpChannelID, err := s.GetChannelIdByNameAndGuildID(context.Background(), guildId, config.LogStrategicpoint)
+	if err != nil {
+		return err
+	}
+
+	membersLogSpMessageID, err := s.GetMessageIdByNameAndGuildID(context.Background(), guildId, config.LogStrategicpoint)
+	if err != nil {
+		return err
+	}
+
+	_, err = session.ChannelMessageEditEmbed(membersLogSpChannelID, membersLogSpMessageID, membersEmbed)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *serviceImplementation) AddSPtoLog(ctx context.Context, guildId, mapName, spawnTime, winningNation, userSpawning, userInteracting string) (int, error) {
 	return s.repo.AddSP(ctx, guildId, mapName, spawnTime, winningNation, userSpawning, userInteracting)
 }

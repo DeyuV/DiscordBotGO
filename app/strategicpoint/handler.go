@@ -24,17 +24,16 @@ type Service interface {
 
 	LogEmbed(mapValue, timeValue, nationValue string) *discordgo.MessageEmbed
 	AdminLogEmbed(mapValue, timeValue, nationValue, userSpawning, UserInteracting, id string) *discordgo.MessageEmbed
-	ResetLog(session *discordgo.Session, guildId string)
 	InitResetLog(session *discordgo.Session)
 	UpdateLog(ctx context.Context, id int, guildId, mapName, spawnTime, winningNation, userModify string) error
 	AddSPtoLog(ctx context.Context, guildId, mapName, spawnTime, winningNation, userSpawning, userInteracting string) (int, error)
 	DeleteSPfromLog(ctx context.Context, id int) error
-	RefreshLog(ctx context.Context, guildId string) (*discordgo.MessageEmbed, *discordgo.MessageEmbed, error)
+	SendEditedEmbed(ctx context.Context, session *discordgo.Session, guildId string) error
 }
 
 var (
-	ANImaps         = []string{"Edmont Valley", "Desert of Ardor", "Crystal Cave", "Plain of Doleful Melody", "Herremeze Relic Site", "Atus Beach", "Gjert Road", "Slope Port", "Portsmouth Canyon"}
-	BCUmaps         = []string{"Bach Mountain Chain", "Blackburn Site", "Zaylope Beach", "Starlite Valley", "Redline", "Kahlua Beach", "Nubarke Cave", "Orina Peninsula", "Daisy Riverhead"}
+	ANImaps         = map[string]string{"ev": "Edmont Valley", "doa": "Desert of Ardor", "cc": "Crystal Cave", "pdm": "Plain of Doleful Melody", "hrs": "Herremeze Relic Site", "ab": "Atus Beach", "gr": "Gjert Road", "sp": "Slope Port", "pmc": "Portsmouth Canyon"}
+	BCUmaps         = map[string]string{"bmc": "Bach Mountain Chain", "bs": "Blackburn Site", "zb": "Zaylope Beach", "sv": "Starlite Valley", "rl": "Redline", "kb": "Kahlua Beach", "nc": "Nubarke Cave", "op": "Orina Peninsula", "dr": "Daisy Riverhead"}
 	aniMenuOption   []discordgo.SelectMenuOption
 	bcuMenuOption   []discordgo.SelectMenuOption
 	aniResponseData []discordgo.MessageComponent
@@ -254,6 +253,7 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 						Type: discordgo.InteractionResponseChannelMessageWithSource,
 						Data: &discordgo.InteractionResponseData{
 							Content: i.Member.Mention() + " Please insert a number below 61",
+							Flags:   discordgo.MessageFlagsEphemeral,
 						},
 					})
 					if err != nil {
@@ -378,15 +378,15 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 				}
 
 				var adminEmbed *discordgo.MessageEmbed
-				if strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[1].Value, "-", "") != "" {
-					adminEmbed = svc.AdminLogEmbed(strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[1].Value, "-", ""),
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[2].Value, "-", ""),
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[5].Value, "-", ""),
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[3].Value, "-", "")+"\n"+i.Member.User.Username,
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[4].Value, "-", ""),
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[0].Value, "-", ""))
+				if strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[1].Value, config.EmptyEmbedFieldValue, "") != "" {
+					adminEmbed = svc.AdminLogEmbed(strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[1].Value, config.EmptyEmbedFieldValue, ""),
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[2].Value, config.EmptyEmbedFieldValue, ""),
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[5].Value, config.EmptyEmbedFieldValue, ""),
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[3].Value, config.EmptyEmbedFieldValue, "")+"\n"+i.Member.User.Username,
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[4].Value, config.EmptyEmbedFieldValue, ""),
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[0].Value, config.EmptyEmbedFieldValue, ""))
 				} else {
-					adminEmbed = svc.AdminLogEmbed("-", "-", "-", i.Member.User.Username, "-", "-")
+					adminEmbed = svc.AdminLogEmbed(config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, i.Member.User.Username, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue)
 				}
 
 				_, err = s.ChannelMessageEditEmbed(adminLogSpChannelID, adminLogSpMessageID, adminEmbed)
@@ -402,26 +402,6 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCreate) {
 	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
 		if m.Author.ID == s.State.User.ID {
-			if len(m.Content) > len("Please insert a number below 61") && strings.SplitN(m.Content, " ", 2)[1] == "Please insert a number bellow 61" {
-				go func() {
-					time.Sleep(1 * time.Minute)
-					err := s.ChannelMessageDelete(m.ChannelID, m.ID)
-					if err != nil {
-						return
-					}
-				}()
-			}
-
-			if len(m.Content) > len("Please insert a number form id column of Admin Strategic Point History Panel") && strings.SplitN(m.Content, " ", 2)[1] == "Please insert a number form id column of Admin Strategic Point History Panel" {
-				go func() {
-					time.Sleep(1 * time.Minute)
-					err := s.ChannelMessageDelete(m.ChannelID, m.ID)
-					if err != nil {
-						return
-					}
-				}()
-			}
-
 			roles, err := s.GuildRoles(m.GuildID)
 			if err != nil {
 				return
@@ -509,9 +489,9 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 						winningNationLong = config.BCUlongName
 					}
 
-					membersEmbed := svc.LogEmbed(strings.ReplaceAll(logMessage.Embeds[0].Fields[0].Value, "-", "")+"\n"+mapName,
-						strings.ReplaceAll(logMessage.Embeds[0].Fields[1].Value, "-", "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>",
-						strings.ReplaceAll(logMessage.Embeds[0].Fields[2].Value, "-", "")+"\n"+"<:"+winningNationShort+":"+svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort)+"> "+winningNationLong)
+					membersEmbed := svc.LogEmbed(strings.ReplaceAll(logMessage.Embeds[0].Fields[0].Value, config.EmptyEmbedFieldValue, "")+"\n"+mapName,
+						strings.ReplaceAll(logMessage.Embeds[0].Fields[1].Value, config.EmptyEmbedFieldValue, "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>",
+						strings.ReplaceAll(logMessage.Embeds[0].Fields[2].Value, config.EmptyEmbedFieldValue, "")+"\n"+"<:"+winningNationShort+":"+svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort)+"> "+winningNationLong)
 
 					_, err = s.ChannelMessageEditEmbed(logSpChannelID, logSpMessageID, membersEmbed)
 					if err != nil {
@@ -543,12 +523,12 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 						return
 					}
 
-					adminEmbed := svc.AdminLogEmbed(strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[1].Value, "-", "")+"\n"+mapName,
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[2].Value, "-", "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>",
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[5].Value, "-", "")+"\n"+"<:"+winningNationShort+":"+svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort)+"> "+winningNationLong,
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[3].Value, "-", ""),
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[4].Value, "-", "")+"\n"+m.Author.Username,
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[0].Value, "-", "")+"\n"+strconv.Itoa(spID))
+					adminEmbed := svc.AdminLogEmbed(strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[1].Value, config.EmptyEmbedFieldValue, "")+"\n"+mapName,
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[2].Value, config.EmptyEmbedFieldValue, "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>",
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[5].Value, config.EmptyEmbedFieldValue, "")+"\n"+"<:"+winningNationShort+":"+svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort)+"> "+winningNationLong,
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[3].Value, config.EmptyEmbedFieldValue, ""),
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[4].Value, config.EmptyEmbedFieldValue, "")+"\n"+m.Author.Username,
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[0].Value, config.EmptyEmbedFieldValue, "")+"\n"+strconv.Itoa(spID))
 
 					_, err = s.ChannelMessageEditEmbed(adminLogSpChannelID, adminLogSpMessageID, adminEmbed)
 					if err != nil {
@@ -606,7 +586,7 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 					}
 
 					var adminEmbed *discordgo.MessageEmbed
-					if strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[1].Value, "-", "") != "" {
+					if strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[1].Value, config.EmptyEmbedFieldValue, "") != "" {
 						adminEmbed = svc.AdminLogEmbed(adminLogMessage.Embeds[0].Fields[1].Value,
 							adminLogMessage.Embeds[0].Fields[2].Value,
 							adminLogMessage.Embeds[0].Fields[5].Value,
@@ -614,7 +594,7 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 							adminLogMessage.Embeds[0].Fields[4].Value,
 							adminLogMessage.Embeds[0].Fields[0].Value)
 					} else {
-						adminEmbed = svc.AdminLogEmbed("-", "-", "-", "-", "-", "-")
+						adminEmbed = svc.AdminLogEmbed(config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue)
 					}
 
 					_, err = s.ChannelMessageEditEmbed(adminLogSpChannelID, adminLogSpMessageID, adminEmbed)
@@ -655,9 +635,9 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 					value, _ := strconv.Atoi(strings.Split(message.Embeds[0].Fields[1].Value, " ")[0])
 					value = 60 - value
 
-					membersEmbed := svc.LogEmbed(strings.ReplaceAll(logMessage.Embeds[0].Fields[0].Value, "-", "")+"\n"+message.Embeds[0].Fields[0].Value,
-						strings.ReplaceAll(logMessage.Embeds[0].Fields[1].Value, "-", "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Minute*time.Duration(value*-1)).Unix()))+":R>",
-						strings.ReplaceAll(logMessage.Embeds[0].Fields[2].Value, "-", "")+"\n"+"<:"+winningNationShort+":"+svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort)+"> "+winningNationLong)
+					membersEmbed := svc.LogEmbed(strings.ReplaceAll(logMessage.Embeds[0].Fields[0].Value, config.EmptyEmbedFieldValue, "")+"\n"+message.Embeds[0].Fields[0].Value,
+						strings.ReplaceAll(logMessage.Embeds[0].Fields[1].Value, config.EmptyEmbedFieldValue, "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Minute*time.Duration(value*-1)).Unix()))+":R>",
+						strings.ReplaceAll(logMessage.Embeds[0].Fields[2].Value, config.EmptyEmbedFieldValue, "")+"\n"+"<:"+winningNationShort+":"+svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort)+"> "+winningNationLong)
 
 					_, err = s.ChannelMessageEditEmbed(logSpChannelID, logSpMessageID, membersEmbed)
 					if err != nil {
@@ -689,12 +669,12 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 						return
 					}
 
-					adminEmbed := svc.AdminLogEmbed(strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[1].Value, "-", "")+"\n"+message.Embeds[0].Fields[0].Value,
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[2].Value, "-", "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Minute*time.Duration(value*-1)).Unix()))+":R>",
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[5].Value, "-", "")+"\n"+"<:"+winningNationShort+":"+svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort)+"> "+winningNationLong,
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[3].Value, "-", ""),
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[4].Value, "-", "")+"\n"+m.Member.User.Username,
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[0].Value, "-", "")+"\n"+strconv.Itoa(spID))
+					adminEmbed := svc.AdminLogEmbed(strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[1].Value, config.EmptyEmbedFieldValue, "")+"\n"+message.Embeds[0].Fields[0].Value,
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[2].Value, config.EmptyEmbedFieldValue, "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Minute*time.Duration(value*-1)).Unix()))+":R>",
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[5].Value, config.EmptyEmbedFieldValue, "")+"\n"+"<:"+winningNationShort+":"+svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort)+"> "+winningNationLong,
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[3].Value, config.EmptyEmbedFieldValue, ""),
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[4].Value, config.EmptyEmbedFieldValue, "")+"\n"+m.Member.User.Username,
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[0].Value, config.EmptyEmbedFieldValue, "")+"\n"+strconv.Itoa(spID))
 
 					_, err = s.ChannelMessageEditEmbed(adminLogSpChannelID, adminLogSpMessageID, adminEmbed)
 					if err != nil {
@@ -885,45 +865,9 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							fmt.Println(err)
 						}
 
-						membersEmbed, adminEmbed, err := svc.RefreshLog(context.Background(), i.GuildID)
+						err = svc.SendEditedEmbed(context.Background(), s, i.GuildID)
 						if err != nil {
 							fmt.Println(err)
-						}
-
-						adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						_, err = s.ChannelMessageEditEmbed(adminLogSpChannelID, adminLogSpMessageID, adminEmbed)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						membersLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						membersLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						_, err = s.ChannelMessageEditEmbed(membersLogSpChannelID, membersLogSpMessageID, membersEmbed)
-						if err != nil {
-							fmt.Println(err)
-							return
 						}
 					}
 
@@ -931,13 +875,16 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 						mapName := i.ApplicationCommandData().Options[0].StringValue()
 
 						ok := true
-						for _, m := range ANImaps {
-							if m == mapName {
+						for abbreviation, fullMapName := range ANImaps {
+							if abbreviation == mapName {
+								mapName = fullMapName
 								ok = false
 							}
 						}
-						for _, m := range BCUmaps {
-							if m == mapName {
+
+						for abbreviation, fullMapName := range BCUmaps {
+							if abbreviation == mapName {
+								mapName = fullMapName
 								ok = false
 							}
 						}
@@ -958,7 +905,7 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 						}
 
 						spawnTime := i.ApplicationCommandData().Options[1].StringValue()
-						if strings.Split(spawnTime, ":")[0] != "<t" && strings.Split(spawnTime, ":")[0] != "R>" {
+						if strings.Split(spawnTime, ":")[0] != "<t" && strings.Split(spawnTime, ":")[2] != "R>" {
 							err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 								Type: discordgo.InteractionResponseChannelMessageWithSource,
 								Data: &discordgo.InteractionResponseData{
@@ -995,45 +942,9 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							return
 						}
 
-						membersEmbed, adminEmbed, err := svc.RefreshLog(context.Background(), i.GuildID)
+						err = svc.SendEditedEmbed(context.Background(), s, i.GuildID)
 						if err != nil {
 							fmt.Println(err)
-						}
-
-						adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						_, err = s.ChannelMessageEditEmbed(adminLogSpChannelID, adminLogSpMessageID, adminEmbed)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						membersLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						membersLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						_, err = s.ChannelMessageEditEmbed(membersLogSpChannelID, membersLogSpMessageID, membersEmbed)
-						if err != nil {
-							fmt.Println(err)
-							return
 						}
 
 						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -1080,16 +991,19 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							return
 						}
 
-						mapName := i.ApplicationCommandData().Options[0].StringValue()
+						mapName := i.ApplicationCommandData().Options[1].StringValue()
 
 						ok := true
-						for _, m := range ANImaps {
-							if m == mapName {
+						for abbreviation, fullMapName := range ANImaps {
+							if abbreviation == mapName {
+								mapName = fullMapName
 								ok = false
 							}
 						}
-						for _, m := range BCUmaps {
-							if m == mapName {
+
+						for abbreviation, fullMapName := range BCUmaps {
+							if abbreviation == mapName {
+								mapName = fullMapName
 								ok = false
 							}
 						}
@@ -1109,36 +1023,40 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							return
 						}
 
-						spawnTime := i.ApplicationCommandData().Options[1].StringValue()
-						if strings.Split(spawnTime, ":")[0] != "<t" && strings.Split(spawnTime, ":")[0] != "R>" {
-							err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-								Type: discordgo.InteractionResponseChannelMessageWithSource,
-								Data: &discordgo.InteractionResponseData{
-									Content: "Please type a correct time format: <t:(unix):R>",
-									Flags:   discordgo.MessageFlagsEphemeral,
-								},
-							})
+						spawnTime := i.ApplicationCommandData().Options[2].StringValue()
+						if spawnTime != "?" {
+							if strings.Split(spawnTime, ":")[0] != "<t" && strings.Split(spawnTime, ":")[2] != "R>" {
+								err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+									Type: discordgo.InteractionResponseChannelMessageWithSource,
+									Data: &discordgo.InteractionResponseData{
+										Content: "Please type a correct time format: <t:(unix):R>",
+										Flags:   discordgo.MessageFlagsEphemeral,
+									},
+								})
 
-							if err != nil {
-								fmt.Println(err)
+								if err != nil {
+									fmt.Println(err)
+								}
+								return
 							}
-							return
 						}
 
-						winningNation := i.ApplicationCommandData().Options[2].StringValue()
-						if winningNation != "ani" && winningNation != "bcu" {
-							err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-								Type: discordgo.InteractionResponseChannelMessageWithSource,
-								Data: &discordgo.InteractionResponseData{
-									Content: "Please type short nation name lowercase (ani/bcu)",
-									Flags:   discordgo.MessageFlagsEphemeral,
-								},
-							})
+						winningNation := i.ApplicationCommandData().Options[3].StringValue()
+						if winningNation != "?" {
+							if winningNation != "ani" && winningNation != "bcu" {
+								err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+									Type: discordgo.InteractionResponseChannelMessageWithSource,
+									Data: &discordgo.InteractionResponseData{
+										Content: "Please type short nation name lowercase (ani/bcu)",
+										Flags:   discordgo.MessageFlagsEphemeral,
+									},
+								})
 
-							if err != nil {
-								fmt.Println(err)
+								if err != nil {
+									fmt.Println(err)
+								}
+								return
 							}
-							return
 						}
 
 						err = svc.UpdateLog(context.Background(), spId, i.GuildID, mapName, spawnTime, winningNation, i.Member.User.Username)
@@ -1147,46 +1065,9 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							fmt.Println(err)
 						}
 
-						// Maybe put these in service because it is duplicated around 6 times
-						membersEmbed, adminEmbed, err := svc.RefreshLog(context.Background(), i.GuildID)
+						err = svc.SendEditedEmbed(context.Background(), s, i.GuildID)
 						if err != nil {
 							fmt.Println(err)
-						}
-
-						adminLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						adminLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.AdminLogStrategicpoint)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						_, err = s.ChannelMessageEditEmbed(adminLogSpChannelID, adminLogSpMessageID, adminEmbed)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						membersLogSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						membersLogSpMessageID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.LogStrategicpoint)
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-
-						_, err = s.ChannelMessageEditEmbed(membersLogSpChannelID, membersLogSpMessageID, membersEmbed)
-						if err != nil {
-							fmt.Println(err)
-							return
 						}
 
 						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
