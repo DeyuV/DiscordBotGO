@@ -32,13 +32,15 @@ type Service interface {
 }
 
 var (
-	ANImaps         = map[string]string{"ev": "Edmont Valley", "doa": "Desert of Ardor", "cc": "Crystal Cave", "pdm": "Plain of Doleful Melody", "hrs": "Herremeze Relic Site", "ab": "Atus Beach", "gr": "Gjert Road", "sp": "Slope Port", "pmc": "Portsmouth Canyon"}
-	BCUmaps         = map[string]string{"bmc": "Bach Mountain Chain", "bs": "Blackburn Site", "zb": "Zaylope Beach", "sv": "Starlite Valley", "rl": "Redline", "kb": "Kahlua Beach", "nc": "Nubarke Cave", "op": "Orina Peninsula", "dr": "Daisy Riverhead"}
-	aniMenuOption   []discordgo.SelectMenuOption
-	bcuMenuOption   []discordgo.SelectMenuOption
-	aniResponseData []discordgo.MessageComponent
-	bcuResponseData []discordgo.MessageComponent
-	spHistory       = false
+	ANImaps          = map[string]string{"ev": "Edmont Valley", "doa": "Desert of Ardor", "cc": "Crystal Cave", "pdm": "Plain of Doleful Melody", "hrs": "Herremeze Relic Site", "ab": "Atus Beach", "gr": "Gjert Road", "sp": "Slope Port", "pmc": "Portsmouth Canyon"}
+	BCUmaps          = map[string]string{"bmc": "Bach Mountain Chain", "bs": "Blackburn Site", "zb": "Zaylope Beach", "sv": "Starlite Valley", "rl": "Redline", "kb": "Kahlua Beach", "nc": "Nubarke Cave", "op": "Orina Peninsula", "dr": "Daisy Riverhead"}
+	sortedANImapKeys = []string{"ev", "doa", "cc", "pdm", "hrs", "ab", "gr", "sp", "pmc"}
+	sortedBCUmapKeys = []string{"bmc", "bs", "zb", "sv", "rl", "kb", "nc", "op", "dr"}
+	aniMenuOption    []discordgo.SelectMenuOption
+	bcuMenuOption    []discordgo.SelectMenuOption
+	aniResponseData  []discordgo.MessageComponent
+	bcuResponseData  []discordgo.MessageComponent
+	spHistory        = false
 )
 
 func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -50,14 +52,14 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		}
 
 		if aniMenuOption == nil {
-			for _, m := range ANImaps {
+			for _, m := range sortedANImapKeys {
 				aniMenuOption = append(aniMenuOption, discordgo.SelectMenuOption{
-					Label:       m,
-					Value:       m,
+					Label:       ANImaps[m],
+					Value:       ANImaps[m],
 					Description: "strategic point",
 					Emoji: discordgo.ComponentEmoji{
-						Name:     strings.ReplaceAll(m, " ", ""),
-						ID:       svc.GetEmojiByName(context.Background(), i.GuildID, strings.ReplaceAll(m, " ", "")),
+						Name:     strings.ReplaceAll(ANImaps[m], " ", ""),
+						ID:       svc.GetEmojiByName(context.Background(), i.GuildID, strings.ReplaceAll(ANImaps[m], " ", "")),
 						Animated: false,
 					},
 					Default: false,
@@ -78,14 +80,14 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		}
 
 		if bcuMenuOption == nil {
-			for _, m := range BCUmaps {
+			for _, m := range sortedBCUmapKeys {
 				bcuMenuOption = append(bcuMenuOption, discordgo.SelectMenuOption{
-					Label:       m,
-					Value:       m,
+					Label:       BCUmaps[m],
+					Value:       BCUmaps[m],
 					Description: "strategic point",
 					Emoji: discordgo.ComponentEmoji{
-						Name:     strings.ReplaceAll(m, " ", ""),
-						ID:       svc.GetEmojiByName(context.Background(), i.GuildID, strings.ReplaceAll(m, " ", "")),
+						Name:     strings.ReplaceAll(BCUmaps[m], " ", ""),
+						ID:       svc.GetEmojiByName(context.Background(), i.GuildID, strings.ReplaceAll(BCUmaps[m], " ", "")),
 						Animated: false,
 					},
 					Default: false,
@@ -517,7 +519,7 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 						return
 					}
 
-					spID, err := svc.AddSPtoLog(context.Background(), m.GuildID, mapName, "<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>", winningNationShort, "", m.Author.Username)
+					spID, err := svc.AddSPtoLog(context.Background(), m.GuildID, mapName, "<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>", winningNationShort, strings.Split(adminLogMessage.Embeds[0].Fields[3].Value, "\n")[len(strings.Split(adminLogMessage.Embeds[0].Fields[3].Value, "\n"))-1], m.Author.Username)
 					if err != nil {
 						fmt.Println(err)
 						return
@@ -526,7 +528,7 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 					adminEmbed := svc.AdminLogEmbed(strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[1].Value, config.EmptyEmbedFieldValue, "")+"\n"+mapName,
 						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[2].Value, config.EmptyEmbedFieldValue, "")+"\n"+"<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>",
 						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[5].Value, config.EmptyEmbedFieldValue, "")+"\n"+"<:"+winningNationShort+":"+svc.GetEmojiByName(context.Background(), m.GuildID, winningNationShort)+"> "+winningNationLong,
-						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[3].Value, config.EmptyEmbedFieldValue, ""),
+						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[3].Value, config.EmptyEmbedFieldValue, "")+"\n"+strings.Split(adminLogMessage.Embeds[0].Fields[3].Value, "\n")[len(strings.Split(adminLogMessage.Embeds[0].Fields[3].Value, "\n"))-1],
 						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[4].Value, config.EmptyEmbedFieldValue, "")+"\n"+m.Author.Username,
 						strings.ReplaceAll(adminLogMessage.Embeds[0].Fields[0].Value, config.EmptyEmbedFieldValue, "")+"\n"+strconv.Itoa(spID))
 
@@ -602,7 +604,7 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 						fmt.Println(err)
 						return
 					}
-
+					return
 				}
 				if m.Emoji.Name == "won" || m.Emoji.Name == "lost" {
 					logSpChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), m.GuildID, config.LogStrategicpoint)
@@ -628,8 +630,8 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 						winningNationShort = config.ANIshortName
 						winningNationLong = config.ANIlongName
 					} else {
-						winningNationShort = config.ANIshortName
-						winningNationLong = config.ANIlongName
+						winningNationShort = config.BCUshortName
+						winningNationLong = config.BCUlongName
 					}
 
 					value, _ := strconv.Atoi(strings.Split(message.Embeds[0].Fields[1].Value, " ")[0])
@@ -663,7 +665,7 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 						return
 					}
 
-					spID, err := svc.AddSPtoLog(context.Background(), m.GuildID, message.Embeds[0].Fields[0].Value, "<t:"+strconv.Itoa(int(time.Now().Add(time.Minute*time.Duration(value*-1)).Unix()))+":R>", winningNationShort, adminLogMessage.Embeds[0].Fields[3].Value, m.Member.User.Username)
+					spID, err := svc.AddSPtoLog(context.Background(), m.GuildID, message.Embeds[0].Fields[0].Value, "<t:"+strconv.Itoa(int(time.Now().Add(time.Minute*time.Duration(value*-1)).Unix()))+":R>", winningNationShort, strings.Split(adminLogMessage.Embeds[0].Fields[3].Value, "\n")[len(strings.Split(adminLogMessage.Embeds[0].Fields[3].Value, "\n"))-1], m.Member.User.Username)
 					if err != nil {
 						fmt.Println(err)
 						return
