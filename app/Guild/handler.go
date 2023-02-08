@@ -49,14 +49,18 @@ func AddGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildCreate) 
 				var command discordgo.ApplicationCommand
 				name := slashCommand.Command.CommandName
 				description := slashCommand.Command.CommandDescription
+				ok := true
 				if name == "server-online" || name == "server-offline" || name == "server-maint" {
 					switch name {
 					case "server-online":
 						description = "Set channel name to 🟢┃game-info + custom message"
+						ok = false
 					case "server-offline":
 						description = "Set channel name to 🔴┃game-info❕ + custom message"
+						ok = false
 					case "server-maint":
 						description = "Set channel name to 🟠┃game-info❕ + custom message"
+						ok = false
 					}
 
 					command = discordgo.ApplicationCommand{
@@ -99,6 +103,7 @@ func AddGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildCreate) 
 							},
 						},
 					}
+					ok = false
 				case "modify-sp":
 					command = discordgo.ApplicationCommand{
 						Name:        name,
@@ -130,6 +135,7 @@ func AddGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildCreate) 
 							},
 						},
 					}
+					ok = false
 				case "delete-sp":
 					command = discordgo.ApplicationCommand{
 						Name:        name,
@@ -143,10 +149,12 @@ func AddGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildCreate) 
 							},
 						},
 					}
-				default:
-					command = discordgo.ApplicationCommand{Name: name, Description: description}
+					ok = false
 				}
 
+				if ok {
+					command = discordgo.ApplicationCommand{Name: name, Description: description}
+				}
 				commands = append(commands, &command)
 			}
 			registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
