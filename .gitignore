@@ -2,4 +2,5 @@
 .env
 .vscode
 cmd\monolith\.env
+cmd\monolith\UWSbot.sqlite3
 db
