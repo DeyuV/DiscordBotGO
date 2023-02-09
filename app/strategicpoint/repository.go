@@ -74,7 +74,6 @@ func (r *repositoryImpl) AddSP(ctx context.Context, guildId, mapName, spawnTime,
 }
 
 func (r *repositoryImpl) DeleteSP(ctx context.Context, id int) error {
-	r.db.ExecContext(context.Background(), `PRAGMA foreign_keys = ON`)
 	_, err := r.db.ExecContext(ctx, `DELETE FROM guildlogsp WHERE id = ?`, id)
 
 	return err
@@ -129,7 +128,9 @@ func (r *repositoryImpl) GetAllSPLogsByGuild(ctx context.Context, guildId string
 			return nil, err
 		}
 
-		spLogs = append(spLogs, spLog)
+		if spLog.SPDate.Month() == time.Now().Month() && spLog.SPDate.Day() == time.Now().Day() {
+			spLogs = append(spLogs, spLog)
+		}
 	}
 
 	return spLogs, nil

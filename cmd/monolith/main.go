@@ -5,6 +5,7 @@ import (
 	"GOdiscordBOT/app/serverstatus"
 	"GOdiscordBOT/app/settings"
 	"GOdiscordBOT/app/strategicpoint"
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -35,17 +36,23 @@ func main() {
 	}
 
 	// Opening connection to database
-	conn, err := sql.Open("sqlite3", "./UWSbot")
+	conn, err := sql.Open("sqlite3", "./UWSbot.sqlite3")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	defer conn.Close()
 
+	_, err = conn.ExecContext(context.Background(), `PRAGMA foreign_keys = ON`)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	// Development token
-	token := os.Getenv("DEVELOPMENTTOKEN")
+	//token := os.Getenv("DEVELOPMENTTOKEN")
 	// Deploy token (UWS)
-	//token := os.Getenv("UWSTOKEN")
+	token := os.Getenv("UWSTOKEN")
 
 	// Create a new Discord session using the provided token
 	bot, err := discordgo.New("Bot " + token)

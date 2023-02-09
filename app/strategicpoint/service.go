@@ -109,27 +109,6 @@ func (s *serviceImplementation) AdminLogEmbed(mapValue, timeValue, nationValue, 
 	}
 }
 
-func (s *serviceImplementation) ResetLog(session *discordgo.Session, guildId string) {
-	embed := s.LogEmbed(config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue)
-
-	logSpChannelID, err := s.repo.GetChannelIdByNameAndGuildID(context.Background(), guildId, config.LogStrategicpoint)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	logSpMessageID, err := s.repo.GetMessageIdByNameAndGuildID(context.Background(), guildId, config.LogStrategicpoint)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	_, err = session.ChannelMessageEditEmbed(logSpChannelID, logSpMessageID, embed)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-}
-
 func (s *serviceImplementation) InitResetLog(session *discordgo.Session) {
 	t := time.Now()
 	n := time.Date(t.Year(), t.Month(), t.Day(), 23, 59, 0, 0, t.Location())
@@ -142,7 +121,7 @@ func (s *serviceImplementation) InitResetLog(session *discordgo.Session) {
 		time.Sleep(d)
 		d = 24 * time.Hour
 		for _, guild := range session.State.Guilds {
-			s.ResetLog(session, guild.ID)
+			s.EditeEmbeds(context.Background(), session, guild.ID, true)
 		}
 	}
 }
@@ -258,10 +237,17 @@ func (s *serviceImplementation) RefreshLog(ctx context.Context, guildId string) 
 	return membersEmbed, adminsEmbed, nil
 }
 
-func (s *serviceImplementation) SendEditedEmbed(ctx context.Context, session *discordgo.Session, guildId string) error {
-	membersEmbed, adminEmbed, err := s.RefreshLog(context.Background(), guildId)
-	if err != nil {
-		return err
+func (s *serviceImplementation) EditeEmbeds(ctx context.Context, session *discordgo.Session, guildId string, empty bool) error {
+	var membersEmbed, adminEmbed *discordgo.MessageEmbed
+	var err error
+	if !empty {
+		membersEmbed, adminEmbed, err = s.RefreshLog(context.Background(), guildId)
+		if err != nil {
+			return err
+		}
+	} else {
+		membersEmbed = s.LogEmbed(config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue)
+		adminEmbed = s.AdminLogEmbed(config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue)
 	}
 
 	adminLogSpChannelID, err := s.GetChannelIdByNameAndGuildID(context.Background(), guildId, config.AdminLogStrategicpoint)

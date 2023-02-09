@@ -2,3 +2,4 @@
 .env
 .vscode
 cmd\monolith\.env
+db

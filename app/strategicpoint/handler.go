@@ -28,7 +28,7 @@ type Service interface {
 	UpdateLog(ctx context.Context, id int, guildId, mapName, spawnTime, winningNation, userModify string) error
 	AddSPtoLog(ctx context.Context, guildId, mapName, spawnTime, winningNation, userSpawning, userInteracting string) (int, error)
 	DeleteSPfromLog(ctx context.Context, id int) error
-	SendEditedEmbed(ctx context.Context, session *discordgo.Session, guildId string) error
+	EditeEmbeds(ctx context.Context, session *discordgo.Session, guildId string, empty bool) error
 }
 
 var (
@@ -867,7 +867,7 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							fmt.Println(err)
 						}
 
-						err = svc.SendEditedEmbed(context.Background(), s, i.GuildID)
+						err = svc.EditeEmbeds(context.Background(), s, i.GuildID, false)
 						if err != nil {
 							fmt.Println(err)
 						}
@@ -944,7 +944,7 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							return
 						}
 
-						err = svc.SendEditedEmbed(context.Background(), s, i.GuildID)
+						err = svc.EditeEmbeds(context.Background(), s, i.GuildID, false)
 						if err != nil {
 							fmt.Println(err)
 						}
@@ -1067,7 +1067,7 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							fmt.Println(err)
 						}
 
-						err = svc.SendEditedEmbed(context.Background(), s, i.GuildID)
+						err = svc.EditeEmbeds(context.Background(), s, i.GuildID, false)
 						if err != nil {
 							fmt.Println(err)
 						}
