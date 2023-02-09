@@ -4,4 +4,4 @@
 cmd\monolith\.env
 cmd\monolith\UWSbot.sqlite3
 db
-GO
+go
