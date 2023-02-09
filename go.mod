@@ -1,4 +1,4 @@
-module GOdiscordBOT
+module DiscordBotGO
 
 go 1.18
 

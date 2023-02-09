@@ -1,7 +1,7 @@
 package serverstatus
 
 import (
-	"GOdiscordBOT/pkg/config"
+	"DiscordBotGO/pkg/config"
 	"context"
 	"database/sql"
 	"fmt"

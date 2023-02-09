@@ -1,7 +1,7 @@
 package strategicpoint
 
 import (
-	"GOdiscordBOT/pkg/config"
+	"DiscordBotGO/pkg/config"
 	"context"
 	"encoding/json"
 	"errors"

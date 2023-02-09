@@ -1,10 +1,10 @@
 package main
 
 import (
-	"GOdiscordBOT/app/guild"
-	"GOdiscordBOT/app/serverstatus"
-	"GOdiscordBOT/app/settings"
-	"GOdiscordBOT/app/strategicpoint"
+	"DiscordBotGO/app/guild"
+	"DiscordBotGO/app/serverstatus"
+	"DiscordBotGO/app/settings"
+	"DiscordBotGO/app/strategicpoint"
 	"context"
 	"fmt"
 	"log"

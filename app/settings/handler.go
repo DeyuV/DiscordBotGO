@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"GOdiscordBOT/pkg/config"
+	"DiscordBotGO/pkg/config"
 
 	"github.com/bwmarrin/discordgo"
 )
