@@ -1010,7 +1010,7 @@ func AdminSPCommands(svc Service) func(s *discordgo.Session, i *discordgo.Intera
 							}
 						}
 
-						if ok {
+						if ok && mapName != "?" {
 							err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 								Type: discordgo.InteractionResponseChannelMessageWithSource,
 								Data: &discordgo.InteractionResponseData{
