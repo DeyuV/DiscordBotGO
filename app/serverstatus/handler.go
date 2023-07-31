@@ -6,7 +6,6 @@ import (
 	"database/sql"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
@@ -66,12 +65,10 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 
 						err = svc.AddMessageId(context.Background(), i.GuildID, config.ServerOnline, message.ID)
 						if err != nil {
-							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateMessageId(context.Background(), i.GuildID, config.ServerOnline, message.ID)
-								if err != nil {
-									fmt.Println(err)
-									return
-								}
+							err = svc.UpdateMessageId(context.Background(), i.GuildID, config.ServerOnline, message.ID)
+							if err != nil {
+								fmt.Println(err)
+								return
 							}
 						}
 
@@ -124,12 +121,10 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 
 						err = svc.AddMessageId(context.Background(), i.GuildID, config.ServerOffline, message.ID)
 						if err != nil {
-							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateMessageId(context.Background(), i.GuildID, config.ServerOffline, message.ID)
-								if err != nil {
-									fmt.Println(err)
-									return
-								}
+							err = svc.UpdateMessageId(context.Background(), i.GuildID, config.ServerOffline, message.ID)
+							if err != nil {
+								fmt.Println(err)
+								return
 							}
 						}
 
@@ -182,12 +177,10 @@ func ServerStatus(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 
 						err = svc.AddMessageId(context.Background(), i.GuildID, config.ServerMaintenance, message.ID)
 						if err != nil {
-							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateMessageId(context.Background(), i.GuildID, config.ServerMaintenance, message.ID)
-								if err != nil {
-									fmt.Println(err)
-									return
-								}
+							err = svc.UpdateMessageId(context.Background(), i.GuildID, config.ServerMaintenance, message.ID)
+							if err != nil {
+								fmt.Println(err)
+								return
 							}
 						}
 

@@ -3,7 +3,6 @@ package settings
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"DiscordBotGO/pkg/config"
 
@@ -30,19 +29,18 @@ func SetChannelId(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 					if i.ApplicationCommandData().Name == "set-server-status-channel" {
 						err = svc.AddChannelId(context.Background(), i.GuildID, config.ServerStatus, i.ChannelID)
 						if err != nil {
-							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateChannelId(context.Background(), i.GuildID, config.ServerStatus, i.ChannelID)
-								if err != nil {
-									fmt.Println(err)
-									return
-								}
+							err = svc.UpdateChannelId(context.Background(), i.GuildID, config.ServerStatus, i.ChannelID)
+							if err != nil {
+								fmt.Println(err)
+								return
 							}
+
 						}
 
 						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
 							Type: discordgo.InteractionResponseChannelMessageWithSource,
 							Data: &discordgo.InteractionResponseData{
-								Content: "This will be channel used for server status commands",
+								Content: "This channel will be used for server status commands",
 								Flags:   discordgo.MessageFlagsEphemeral,
 							},
 						})
@@ -53,66 +51,30 @@ func SetChannelId(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 						}
 					}
 
-					if i.ApplicationCommandData().Name == "set-sp-channel" {
-						err = svc.AddChannelId(context.Background(), i.GuildID, config.Strategicpoint, i.ChannelID)
-						if err != nil {
-							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateChannelId(context.Background(), i.GuildID, config.Strategicpoint, i.ChannelID)
+					if perms&discordgo.PermissionAdministrator != 0 {
+						if i.ApplicationCommandData().Name == "set-sp-forum-channel" {
+							err = svc.AddChannelId(context.Background(), i.GuildID, config.SPforum, i.ChannelID)
+							if err != nil {
+								err = svc.UpdateChannelId(context.Background(), i.GuildID, config.SPforum, i.ChannelID)
 								if err != nil {
 									fmt.Println(err)
 									return
 								}
+
 							}
-						}
 
-						err = svc.AddChannelId(context.Background(), i.GuildID, config.LogStrategicpoint, i.ChannelID)
-						if err != nil {
-							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateChannelId(context.Background(), i.GuildID, config.LogStrategicpoint, i.ChannelID)
-								if err != nil {
-									fmt.Println(err)
-									return
-								}
+							err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+								Type: discordgo.InteractionResponseChannelMessageWithSource,
+								Data: &discordgo.InteractionResponseData{
+									Content: "This channel will be used for sending forum sp notification",
+									Flags:   discordgo.MessageFlagsEphemeral,
+								},
+							})
+
+							if err != nil {
+								fmt.Println(err)
+								return
 							}
-						}
-
-						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-							Type: discordgo.InteractionResponseChannelMessageWithSource,
-							Data: &discordgo.InteractionResponseData{
-								Content: "This will be channel used for SP commands",
-								Flags:   discordgo.MessageFlagsEphemeral,
-							},
-						})
-
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-					}
-
-					if i.ApplicationCommandData().Name == "set-admin-sp-channel" {
-						err = svc.AddChannelId(context.Background(), i.GuildID, config.AdminLogStrategicpoint, i.ChannelID)
-						if err != nil {
-							if strings.Split(err.Error(), " ")[0] == "UNIQUE" {
-								err = svc.UpdateChannelId(context.Background(), i.GuildID, config.AdminLogStrategicpoint, i.ChannelID)
-								if err != nil {
-									fmt.Println(err)
-									return
-								}
-							}
-						}
-
-						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-							Type: discordgo.InteractionResponseChannelMessageWithSource,
-							Data: &discordgo.InteractionResponseData{
-								Content: "This will be channel used for admin log SP commands",
-								Flags:   discordgo.MessageFlagsEphemeral,
-							},
-						})
-
-						if err != nil {
-							fmt.Println(err)
-							return
 						}
 					}
 				}

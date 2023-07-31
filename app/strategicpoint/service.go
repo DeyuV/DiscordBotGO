@@ -32,6 +32,9 @@ type Repository interface {
 	UpdateSPmodified(ctx context.Context, id int, modified string) error
 	GetAllSPLogsByGuild(ctx context.Context, guildId string) ([]SPLogs, error)
 	GetSPbyGuildAndId(ctx context.Context, guildId string, spId int) error
+
+	UpdateChannelId(ctx context.Context, guildId, name, channelId string) error
+	AddChannelId(ctx context.Context, guildId, name, channelId string) error
 }
 
 func NewService(repo Repository) Service {
@@ -58,46 +61,6 @@ func (s *serviceImplementation) LogEmbed(mapValue, timeValue, nationValue string
 			{
 				Name:   "Spawn Time: ",
 				Value:  timeValue,
-				Inline: true,
-			},
-			{
-				Name:   "Winning Nation: ",
-				Value:  nationValue,
-				Inline: true,
-			},
-		},
-	}
-}
-
-func (s *serviceImplementation) AdminLogEmbed(mapValue, timeValue, nationValue, userSpawning, UserInteracting, id string) *discordgo.MessageEmbed {
-	return &discordgo.MessageEmbed{
-		Author: &discordgo.MessageEmbedAuthor{},
-		Color:  0x000000,
-		Title:  "STRATEGIC POINT HISTORY ADMIN PANEL",
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   "Id: ",
-				Value:  id,
-				Inline: true,
-			},
-			{
-				Name:   "Map: ",
-				Value:  mapValue,
-				Inline: true,
-			},
-			{
-				Name:   "Spawn Time: ",
-				Value:  timeValue,
-				Inline: true,
-			},
-			{
-				Name:   "User Spawning: ",
-				Value:  userSpawning,
-				Inline: true,
-			},
-			{
-				Name:   "User Interacting: ",
-				Value:  UserInteracting,
 				Inline: true,
 			},
 			{
@@ -197,10 +160,10 @@ func (s *serviceImplementation) UpdateLog(ctx context.Context, id int, guildId, 
 	return nil
 }
 
-func (s *serviceImplementation) RefreshLog(ctx context.Context, guildId string) (*discordgo.MessageEmbed, *discordgo.MessageEmbed, error) {
+func (s *serviceImplementation) RefreshLog(ctx context.Context, guildId string) (*discordgo.MessageEmbed, error) {
 	spLogs, err := s.repo.GetAllSPLogsByGuild(ctx, guildId)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
 	var concatSpLogs SPLogsRefresh
@@ -209,8 +172,6 @@ func (s *serviceImplementation) RefreshLog(ctx context.Context, guildId string) 
 			concatSpLogs.ID += strconv.Itoa(sp.ID) + "\n"
 			concatSpLogs.MapName += sp.MapName + "\n"
 			concatSpLogs.SpawnTime += sp.SpawnTime + "\n"
-			concatSpLogs.UserSpawning += sp.UserSpawning + "\n"
-			concatSpLogs.UserInteracting += sp.UserInteracting + "\n"
 
 			if sp.WinningNation == "ani" {
 				concatSpLogs.WinningNation += "<:" + sp.WinningNation + ":" + s.GetEmojiByName(context.Background(), guildId, sp.WinningNation) + ">" + config.ANIlongName + "\n"
@@ -226,43 +187,24 @@ func (s *serviceImplementation) RefreshLog(ctx context.Context, guildId string) 
 		concatSpLogs.ID = config.EmptyEmbedFieldValue
 		concatSpLogs.MapName = config.EmptyEmbedFieldValue
 		concatSpLogs.SpawnTime = config.EmptyEmbedFieldValue
-		concatSpLogs.UserSpawning = config.EmptyEmbedFieldValue
-		concatSpLogs.UserInteracting = config.EmptyEmbedFieldValue
 		concatSpLogs.WinningNation = config.EmptyEmbedFieldValue
 	}
 
 	membersEmbed := s.LogEmbed(concatSpLogs.MapName, concatSpLogs.SpawnTime, concatSpLogs.WinningNation)
-	adminsEmbed := s.AdminLogEmbed(concatSpLogs.MapName, concatSpLogs.SpawnTime, concatSpLogs.WinningNation, concatSpLogs.UserSpawning, concatSpLogs.UserInteracting, concatSpLogs.ID)
 
-	return membersEmbed, adminsEmbed, nil
+	return membersEmbed, nil
 }
 
 func (s *serviceImplementation) EditeEmbeds(ctx context.Context, session *discordgo.Session, guildId string, empty bool) error {
-	var membersEmbed, adminEmbed *discordgo.MessageEmbed
+	var membersEmbed *discordgo.MessageEmbed
 	var err error
 	if !empty {
-		membersEmbed, adminEmbed, err = s.RefreshLog(context.Background(), guildId)
+		membersEmbed, err = s.RefreshLog(context.Background(), guildId)
 		if err != nil {
 			return err
 		}
 	} else {
 		membersEmbed = s.LogEmbed(config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue)
-		adminEmbed = s.AdminLogEmbed(config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue)
-	}
-
-	adminLogSpChannelID, err := s.GetChannelIdByNameAndGuildID(context.Background(), guildId, config.AdminLogStrategicpoint)
-	if err != nil {
-		return err
-	}
-
-	adminLogSpMessageID, err := s.GetMessageIdByNameAndGuildID(context.Background(), guildId, config.AdminLogStrategicpoint)
-	if err != nil {
-		return err
-	}
-
-	_, err = session.ChannelMessageEditEmbed(adminLogSpChannelID, adminLogSpMessageID, adminEmbed)
-	if err != nil {
-		return err
 	}
 
 	membersLogSpChannelID, err := s.GetChannelIdByNameAndGuildID(context.Background(), guildId, config.LogStrategicpoint)
@@ -317,4 +259,12 @@ func (s *serviceImplementation) DeleteMessageId(ctx context.Context, guildId, me
 
 func (s *serviceImplementation) VerifySpId(ctx context.Context, guildId string, spId int) error {
 	return s.repo.GetSPbyGuildAndId(ctx, guildId, spId)
+}
+
+func (s *serviceImplementation) UpdateChannelId(ctx context.Context, guildId, name, channelId string) error {
+	return s.repo.UpdateChannelId(ctx, guildId, name, channelId)
+}
+
+func (s *serviceImplementation) AddChannelId(ctx context.Context, guildId, name, channelId string) error {
+	return s.repo.AddChannelId(ctx, guildId, name, channelId)
 }

@@ -7,52 +7,44 @@ import (
 	"DiscordBotGO/app/strategicpoint"
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
-
-	"database/sql"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
-	_ "github.com/mattn/go-sqlite3"
+
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/jackc/pgx/v4/pgxpool"
+	//"github.com/joho/godotenv"
 )
 
 func main() {
-	loc, err := time.LoadLocation("America/Antigua")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	time.Local = loc
+	/* 	err := godotenv.Load()
+	   	if err != nil {
+	   		fmt.Println("Error loading .env file" + err.Error())
+	   		return
+	   	} */
 
-	// Loading environment variables
-	err = godotenv.Load()
+	// Set up the connection pool
+	dbpool, err := pgxpool.Connect(context.Background(), os.Getenv("DATABASE_URL"))
 	if err != nil {
-		fmt.Println(err)
-		log.Fatalf("Error loading .env file")
+		fmt.Println("Error connecting to the database:", err)
+		panic(err)
+	}
+	defer dbpool.Close()
+
+	// Ping the database to ensure a successful connection
+	err = dbpool.Ping(context.Background())
+	if err != nil {
+		panic(err)
 	}
 
-	// Opening connection to database
-	conn, err := sql.Open("sqlite3", "./UWSbot.sqlite3")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer conn.Close()
-
-	_, err = conn.ExecContext(context.Background(), `PRAGMA foreign_keys = ON`)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	fmt.Println("Connected to PostgreSQL database successfully!")
 
 	// Development token
-	token := os.Getenv("DEVELOPMENTTOKEN")
+	//token := os.Getenv("DEVELOPMENTTOKEN")
 	// Deploy token (UWS)
-	//token := os.Getenv("UWSTOKEN")
+	token := os.Getenv("UWSTOKEN")
 
 	// Create a new Discord session using the provided token
 	bot, err := discordgo.New("Bot " + token)
@@ -71,10 +63,10 @@ func main() {
 			discordgo.IntentGuildEmojis
 
 	// Repositories
-	guildRepo := guild.NewRepository(conn)
-	serverstatusRepo := serverstatus.NewRepository(conn)
-	strategicpointRepo := strategicpoint.NewRepository(conn)
-	settingsRepo := settings.NewRepository(conn)
+	guildRepo := guild.NewRepository(dbpool)
+	serverstatusRepo := serverstatus.NewRepository(dbpool)
+	strategicpointRepo := strategicpoint.NewRepository(dbpool)
+	settingsRepo := settings.NewRepository(dbpool)
 
 	// Services
 	guildService := guild.NewService(guildRepo)

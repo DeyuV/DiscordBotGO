@@ -15,6 +15,9 @@ type Service interface {
 	AddDefaultCommands(ctx context.Context, guildId string) error
 	AddGuildEmojis(ctx context.Context, guildId, emojiId, emojiName string, animated bool) error
 	DeleteGuildEmojis(ctx context.Context, guildId string) error
+	DeleteGuildCommands(session *discordgo.Session, guildID string) error
+	AddGuildCommands(session *discordgo.Session, guildID, guildName string) error
+	DeleteDefaultCommands(ctx context.Context, guildId string) error
 }
 
 // AddGuild Adds a guild on database when bot creates the guilds where it is a member or when invited
@@ -37,135 +40,10 @@ func AddGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildCreate) 
 				return
 			}
 
-			slashCommands, err := svc.GetSlashCommandsByGuildId(context.Background(), c.ID)
+			err = svc.AddGuildCommands(s, c.ID, c.Name)
 			if err != nil {
-				fmt.Println("Failed to get slash commands")
 				fmt.Println(err)
 				return
-			}
-			var commands []*discordgo.ApplicationCommand
-
-			for _, slashCommand := range slashCommands {
-				var command discordgo.ApplicationCommand
-				name := slashCommand.Command.CommandName
-				description := slashCommand.Command.CommandDescription
-				ok := true
-				if name == "server-online" || name == "server-offline" || name == "server-maint" {
-					switch name {
-					case "server-online":
-						description = "Set channel name to 🟢┃game-info + custom message"
-						ok = false
-					case "server-offline":
-						description = "Set channel name to 🔴┃game-info❕ + custom message"
-						ok = false
-					case "server-maint":
-						description = "Set channel name to 🟠┃game-info❕ + custom message"
-						ok = false
-					}
-
-					command = discordgo.ApplicationCommand{
-						Name:        name,
-						Description: description,
-						Options: []*discordgo.ApplicationCommandOption{
-							{
-								Type:        discordgo.ApplicationCommandOptionString,
-								Name:        "message",
-								Description: "Input text to show as message",
-								Required:    true,
-							},
-						},
-					}
-				}
-
-				switch name {
-				case "add-sp":
-					command = discordgo.ApplicationCommand{
-						Name:        name,
-						Description: description,
-						Options: []*discordgo.ApplicationCommandOption{
-							{
-								Type:        discordgo.ApplicationCommandOptionString,
-								Name:        "map-name",
-								Description: "Input full map name",
-								Required:    true,
-							},
-							{
-								Type:        discordgo.ApplicationCommandOptionString,
-								Name:        "spawn-time",
-								Description: "Input in format <t:(unix):R>",
-								Required:    true,
-							},
-							{
-								Type:        discordgo.ApplicationCommandOptionString,
-								Name:        "winning-nation",
-								Description: "Input short name of winning nation (ani/bcu)",
-								Required:    true,
-							},
-						},
-					}
-					ok = false
-				case "modify-sp":
-					command = discordgo.ApplicationCommand{
-						Name:        name,
-						Description: description,
-						Options: []*discordgo.ApplicationCommandOption{
-							{
-								Type:        discordgo.ApplicationCommandOptionString,
-								Name:        "id",
-								Description: "Input SP id",
-								Required:    true,
-							},
-							{
-								Type:        discordgo.ApplicationCommandOptionString,
-								Name:        "map-name",
-								Description: "Input full map name",
-								Required:    true,
-							},
-							{
-								Type:        discordgo.ApplicationCommandOptionString,
-								Name:        "spawn-time",
-								Description: "Input in format <t:(unix):R>",
-								Required:    true,
-							},
-							{
-								Type:        discordgo.ApplicationCommandOptionString,
-								Name:        "winning-nation",
-								Description: "Input short name of winning nation (ani/bcu)",
-								Required:    true,
-							},
-						},
-					}
-					ok = false
-				case "delete-sp":
-					command = discordgo.ApplicationCommand{
-						Name:        name,
-						Description: description,
-						Options: []*discordgo.ApplicationCommandOption{
-							{
-								Type:        discordgo.ApplicationCommandOptionString,
-								Name:        "id",
-								Description: "Input SP id",
-								Required:    true,
-							},
-						},
-					}
-					ok = false
-				}
-
-				if ok {
-					command = discordgo.ApplicationCommand{Name: name, Description: description}
-				}
-				commands = append(commands, &command)
-			}
-			registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
-
-			for i, v := range commands {
-				cmd, err := s.ApplicationCommandCreate(s.State.User.ID, c.ID, v)
-				if err != nil {
-					fmt.Println("Failed to create slash commands for " + c.Name)
-					fmt.Println(err)
-				}
-				registeredCommands[i] = cmd
 			}
 
 			for _, emoji := range c.Emojis {
@@ -178,6 +56,35 @@ func AddGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildCreate) 
 			}
 
 			fmt.Println("Successfully added guild: " + c.Name)
+		} else {
+			go func() {
+				err = svc.DeleteDefaultCommands(context.Background(), c.ID)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+
+				err = svc.DeleteGuildCommands(s, c.ID)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				fmt.Println("Deleted commands for guild: " + c.Name)
+
+				err = svc.AddDefaultCommands(context.Background(), c.ID)
+				if err != nil {
+					fmt.Println("Failed to insert default commands")
+					fmt.Println(err)
+					return
+				}
+
+				err = svc.AddGuildCommands(s, c.ID, c.Name)
+				if err != nil {
+					fmt.Println(err)
+					return
+				}
+				fmt.Println("Added commands for guild: " + c.Name)
+			}()
 		}
 	}
 }
