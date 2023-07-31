@@ -136,6 +136,15 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 							}
 						}
 
+						err = svc.AddChannelId(context.Background(), i.GuildID, config.LogStrategicpoint, i.ChannelID)
+						if err != nil {
+							err = svc.UpdateChannelId(context.Background(), i.GuildID, config.LogStrategicpoint, i.ChannelID)
+							if err != nil {
+								fmt.Println(err)
+								return
+							}
+						}
+
 						if !spHistory {
 							go svc.InitResetLog(s)
 							spHistory = true
@@ -434,7 +443,7 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 					var spawningUser string
 
 					for t != 0 {
-						time.Sleep(1 * time.Second)
+						time.Sleep(1 * time.Minute)
 						t--
 						embed := &discordgo.MessageEmbed{
 							Author: &discordgo.MessageEmbedAuthor{},
