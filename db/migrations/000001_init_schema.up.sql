@@ -69,4 +69,4 @@ VALUES
     ('server-online', 'Set channel name to 🟢┃game-info + custom message', true),
     ('setup-sp', 'Setup for all sp commands', true),
     ('set-server-status-channel', 'Set current channel to be used for server status related commads', true),
-    ('set-sp-forum-channel', 'Set current channel to be used for forum sp notification');
+    ('set-sp-forum-channel', 'Set current channel to be used for forum sp notification', true);
