@@ -19,16 +19,6 @@ CREATE TABLE "guildcommands"
     primary key (guildid, commandid)
 );
 
-CREATE TABLE "guildemojis"
-(
-    "guildid" varchar(70),
-    "emojiid" varchar(20) not null,
-    "emojiname" varchar(20) not null,
-    "animated" boolean not null,
-    foreign key (guildid) references guilds(id) on delete cascade,
-    primary key (guildid, emojiid)
-);
-
 CREATE TABLE "guildlogsp"
 (
     "id" serial primary key,
@@ -64,9 +54,5 @@ CREATE TABLE "guildmessagesid"
 INSERT INTO "commands"
     (name, description, defaultcommand)
 VALUES
-    ('server-maint', 'Set channel name to 🟠┃game-info❕ + custom message', true),
-    ('server-offline', 'Set channel name to 🔴┃game-info❕ + custom message', true),
-    ('server-online', 'Set channel name to 🟢┃game-info + custom message', true),
     ('setup-sp', 'Setup for all sp commands', true),
-    ('set-server-status-channel', 'Set current channel to be used for server status related commads', true),
     ('set-sp-forum-channel', 'Set current channel to be used for forum sp notification', true);

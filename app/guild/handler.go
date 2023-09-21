@@ -13,8 +13,6 @@ type Service interface {
 	DeleteGuild(ctx context.Context, guildId string) error
 	GetSlashCommandsByGuildId(ctx context.Context, guildId string) ([]Guildcommands, error)
 	AddDefaultCommands(ctx context.Context, guildId string) error
-	AddGuildEmojis(ctx context.Context, guildId, emojiId, emojiName string, animated bool) error
-	DeleteGuildEmojis(ctx context.Context, guildId string) error
 	DeleteGuildCommands(session *discordgo.Session, guildID string) error
 	AddGuildCommands(session *discordgo.Session, guildID, guildName string) error
 	DeleteDefaultCommands(ctx context.Context, guildId string) error
@@ -44,15 +42,6 @@ func AddGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildCreate) 
 			if err != nil {
 				fmt.Println(err)
 				return
-			}
-
-			for _, emoji := range c.Emojis {
-				err := svc.AddGuildEmojis(context.Background(), c.ID, emoji.ID, emoji.Name, emoji.Animated)
-				if err != nil {
-					fmt.Println("Failed to add emoji for " + c.Name)
-					fmt.Println(err)
-					return
-				}
 			}
 
 			fmt.Println("Successfully added guild: " + c.Name)
@@ -100,28 +89,7 @@ func DeleteGuild(svc Service) func(s *discordgo.Session, c *discordgo.GuildDelet
 	}
 }
 
-func EmojiUpdate(svc Service) func(s *discordgo.Session, c *discordgo.GuildEmojisUpdate) {
-	return func(s *discordgo.Session, c *discordgo.GuildEmojisUpdate) {
-		// Maybe there is a better way to do this
-		err := svc.DeleteGuildEmojis(context.Background(), c.GuildID)
-		if err != nil {
-			fmt.Println("Failed to delete emojis")
-			fmt.Println(err)
-			return
-		}
-		for _, emoji := range c.Emojis {
-			err := svc.AddGuildEmojis(context.Background(), c.GuildID, emoji.ID, emoji.Name, emoji.Animated)
-			if err != nil {
-				fmt.Println("Failed to add emoji")
-				fmt.Println(err)
-				return
-			}
-		}
-	}
-}
-
 func Register(bot *discordgo.Session, svc Service) {
 	bot.AddHandler(AddGuild(svc))
 	bot.AddHandler(DeleteGuild(svc))
-	bot.AddHandler(EmojiUpdate(svc))
 }

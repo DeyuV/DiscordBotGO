@@ -15,17 +15,6 @@ type repositoryImpl struct {
 	db *pgxpool.Pool
 }
 
-func (r *repositoryImpl) DeleteEmojis(ctx context.Context, guildId string) error {
-	_, err := r.db.Exec(ctx, `DELETE FROM guildemojis WHERE guildid = $1`, guildId)
-	return err
-}
-
-func (r *repositoryImpl) AddEmojis(ctx context.Context, guildId, emojiId, emojiName string, animated bool) error {
-	_, err := r.db.Exec(ctx, `INSERT INTO guildemojis (guildid, emojiid, emojiname, animated) VALUES ($1,$2,$3,$4)`, guildId, emojiId, emojiName, animated)
-
-	return err
-}
-
 func (r *repositoryImpl) AddDefaultCommands(ctx context.Context, guildId string) error {
 	var commandsID []int
 

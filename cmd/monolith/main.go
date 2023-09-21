@@ -2,7 +2,6 @@ package main
 
 import (
 	"DiscordBotGO/app/guild"
-	"DiscordBotGO/app/serverstatus"
 	"DiscordBotGO/app/settings"
 	"DiscordBotGO/app/strategicpoint"
 	"context"
@@ -42,9 +41,9 @@ func main() {
 	fmt.Println("Connected to PostgreSQL database successfully!")
 
 	// Development token
-	//token := os.Getenv("DEVELOPMENTTOKEN")
+	token := os.Getenv("DEVELOPMENTTOKEN")
 	// Deploy token (UWS)
-	token := os.Getenv("UWSTOKEN")
+	//token := os.Getenv("UWSTOKEN")
 
 	// Create a new Discord session using the provided token
 	bot, err := discordgo.New("Bot " + token)
@@ -64,19 +63,16 @@ func main() {
 
 	// Repositories
 	guildRepo := guild.NewRepository(dbpool)
-	serverstatusRepo := serverstatus.NewRepository(dbpool)
 	strategicpointRepo := strategicpoint.NewRepository(dbpool)
 	settingsRepo := settings.NewRepository(dbpool)
 
 	// Services
 	guildService := guild.NewService(guildRepo)
-	serverstatusService := serverstatus.NewService(serverstatusRepo)
 	strategicpointService := strategicpoint.NewService(strategicpointRepo)
 	settingsService := settings.NewService(settingsRepo)
 
 	// Handlers
 	guild.Register(bot, guildService)
-	serverstatus.Register(bot, serverstatusService)
 	strategicpoint.Register(bot, strategicpointService)
 	settings.Register(bot, settingsService)
 

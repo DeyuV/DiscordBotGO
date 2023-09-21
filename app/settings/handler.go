@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"DiscordBotGO/pkg/config"
+	"DiscordBotGO/pkg/aceonline"
 
 	"github.com/bwmarrin/discordgo"
 )
@@ -26,36 +26,11 @@ func SetChannelId(svc Service) func(s *discordgo.Session, i *discordgo.Interacti
 		case discordgo.InteractionApplicationCommand:
 			{
 				if perms&discordgo.PermissionAdministrator != 0 {
-					if i.ApplicationCommandData().Name == "set-server-status-channel" {
-						err = svc.AddChannelId(context.Background(), i.GuildID, config.ServerStatus, i.ChannelID)
-						if err != nil {
-							err = svc.UpdateChannelId(context.Background(), i.GuildID, config.ServerStatus, i.ChannelID)
-							if err != nil {
-								fmt.Println(err)
-								return
-							}
-
-						}
-
-						err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
-							Type: discordgo.InteractionResponseChannelMessageWithSource,
-							Data: &discordgo.InteractionResponseData{
-								Content: "This channel will be used for server status commands",
-								Flags:   discordgo.MessageFlagsEphemeral,
-							},
-						})
-
-						if err != nil {
-							fmt.Println(err)
-							return
-						}
-					}
-
 					if perms&discordgo.PermissionAdministrator != 0 {
 						if i.ApplicationCommandData().Name == "set-sp-forum-channel" {
-							err = svc.AddChannelId(context.Background(), i.GuildID, config.SPforum, i.ChannelID)
+							err = svc.AddChannelId(context.Background(), i.GuildID, aceonline.SPforum, i.ChannelID)
 							if err != nil {
-								err = svc.UpdateChannelId(context.Background(), i.GuildID, config.SPforum, i.ChannelID)
+								err = svc.UpdateChannelId(context.Background(), i.GuildID, aceonline.SPforum, i.ChannelID)
 								if err != nil {
 									fmt.Println(err)
 									return

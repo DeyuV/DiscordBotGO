@@ -1,7 +1,9 @@
 package strategicpoint
 
 import (
+	"DiscordBotGO/pkg/aceonline"
 	"DiscordBotGO/pkg/config"
+	"DiscordBotGO/pkg/emoji"
 	"context"
 	"encoding/json"
 	"errors"
@@ -16,7 +18,6 @@ import (
 )
 
 type Repository interface {
-	GetEmojiByName(ctx context.Context, guildId, emojiName string) string
 	GetChannelIdByNameAndGuildID(ctx context.Context, guildId, name string) (string, error)
 	UpdateMessageId(ctx context.Context, guildId, name, messageId string) error
 	GetMessageIdByNameAndGuildID(ctx context.Context, guildId, name string) (string, error)
@@ -174,11 +175,11 @@ func (s *serviceImplementation) RefreshLog(ctx context.Context, guildId string) 
 			concatSpLogs.SpawnTime += sp.SpawnTime + "\n"
 
 			if sp.WinningNation == "ani" {
-				concatSpLogs.WinningNation += "<:" + sp.WinningNation + ":" + s.GetEmojiByName(context.Background(), guildId, sp.WinningNation) + ">" + config.ANIlongName + "\n"
+				concatSpLogs.WinningNation += emoji.ANI + aceonline.ANIlongName + "\n"
 			}
 
 			if sp.WinningNation == "bcu" {
-				concatSpLogs.WinningNation += "<:" + sp.WinningNation + ":" + s.GetEmojiByName(context.Background(), guildId, sp.WinningNation) + ">" + config.BCUlongName + "\n"
+				concatSpLogs.WinningNation += emoji.BCU + aceonline.BCUlongName + "\n"
 			}
 		}
 	}
@@ -207,12 +208,12 @@ func (s *serviceImplementation) EditeEmbeds(ctx context.Context, session *discor
 		membersEmbed = s.LogEmbed(config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue, config.EmptyEmbedFieldValue)
 	}
 
-	membersLogSpChannelID, err := s.GetChannelIdByNameAndGuildID(context.Background(), guildId, config.LogStrategicpoint)
+	membersLogSpChannelID, err := s.GetChannelIdByNameAndGuildID(context.Background(), guildId, aceonline.LogStrategicpoint)
 	if err != nil {
 		return err
 	}
 
-	membersLogSpMessageID, err := s.GetMessageIdByNameAndGuildID(context.Background(), guildId, config.LogStrategicpoint)
+	membersLogSpMessageID, err := s.GetMessageIdByNameAndGuildID(context.Background(), guildId, aceonline.LogStrategicpoint)
 	if err != nil {
 		return err
 	}
@@ -239,10 +240,6 @@ func (s *serviceImplementation) UpdateMessageId(ctx context.Context, guildId, na
 
 func (s *serviceImplementation) GetMessageIdByNameAndGuildID(ctx context.Context, guildId, name string) (string, error) {
 	return s.repo.GetMessageIdByNameAndGuildID(ctx, guildId, name)
-}
-
-func (s *serviceImplementation) GetEmojiByName(ctx context.Context, guildId, emojiName string) string {
-	return s.repo.GetEmojiByName(ctx, guildId, emojiName)
 }
 
 func (s *serviceImplementation) GetChannelIdByNameAndGuildID(ctx context.Context, guildId, name string) (string, error) {

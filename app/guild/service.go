@@ -13,8 +13,6 @@ type Repository interface {
 	DeleteGuild(ctx context.Context, guildId string) error
 	GetSlashCommands(ctx context.Context, guildId string) ([]Guildcommands, error)
 	AddDefaultCommands(ctx context.Context, guildId string) error
-	AddEmojis(ctx context.Context, guildId, emojiId, emojiName string, animated bool) error
-	DeleteEmojis(ctx context.Context, guildId string) error
 	DeleteDefaultCommands(ctx context.Context, guildId string) error
 }
 
@@ -26,14 +24,6 @@ func NewService(repo Repository) Service {
 
 type serviceImplementation struct {
 	repo Repository
-}
-
-func (s *serviceImplementation) DeleteGuildEmojis(ctx context.Context, guildId string) error {
-	return s.repo.DeleteEmojis(ctx, guildId)
-}
-
-func (s *serviceImplementation) AddGuildEmojis(ctx context.Context, guildId, emojiId, emojiName string, animated bool) error {
-	return s.repo.AddEmojis(ctx, guildId, emojiId, emojiName, animated)
 }
 
 func (s *serviceImplementation) AddDefaultCommands(ctx context.Context, guildId string) error {

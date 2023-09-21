@@ -1,7 +1,9 @@
 package strategicpoint
 
 import (
+	"DiscordBotGO/pkg/aceonline"
 	"DiscordBotGO/pkg/config"
+	"DiscordBotGO/pkg/emoji"
 	"context"
 	"fmt"
 	"strconv"
@@ -12,7 +14,6 @@ import (
 )
 
 type Service interface {
-	GetEmojiByName(ctx context.Context, guildId, emojiName string) string
 	GetChannelIdByNameAndGuildID(ctx context.Context, guildId, name string) (string, error)
 	UpdateMessageId(ctx context.Context, guildId, name, messageId string) error
 	GetMessageIdByNameAndGuildID(ctx context.Context, guildId, name string) (string, error)
@@ -34,15 +35,11 @@ type Service interface {
 }
 
 var (
-	ANImaps          = map[string]string{"ev": "Edmont Valley", "doa": "Desert of Ardor", "cc": "Crystal Cave", "pdm": "Plain of Doleful Melody", "hrs": "Herremeze Relic Site", "ab": "Atus Beach", "gr": "Gjert Road", "sp": "Slope Port", "pmc": "Portsmouth Canyon"}
-	BCUmaps          = map[string]string{"bmc": "Bach Mountain Chain", "bs": "Blackburn Site", "zb": "Zaylope Beach", "sv": "Starlite Valley", "rl": "Redline", "kb": "Kahlua Beach", "nc": "Nubarke Cave", "op": "Orina Peninsula", "dr": "Daisy Riverhead"}
-	sortedANImapKeys = []string{"ev", "doa", "cc", "pdm", "hrs", "ab", "gr", "sp", "pmc"}
-	sortedBCUmapKeys = []string{"bmc", "bs", "zb", "sv", "rl", "kb", "nc", "op", "dr"}
-	aniMenuOption    []discordgo.SelectMenuOption
-	bcuMenuOption    []discordgo.SelectMenuOption
-	aniResponseData  []discordgo.MessageComponent
-	bcuResponseData  []discordgo.MessageComponent
-	spHistory        = false
+	aniMenuOption   []discordgo.SelectMenuOption
+	bcuMenuOption   []discordgo.SelectMenuOption
+	aniResponseData []discordgo.MessageComponent
+	bcuResponseData []discordgo.MessageComponent
+	spHistory       = false
 )
 
 func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -54,14 +51,14 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		}
 
 		if aniMenuOption == nil {
-			for _, m := range sortedANImapKeys {
+			for _, m := range aceonline.SortedANImapKeys {
 				aniMenuOption = append(aniMenuOption, discordgo.SelectMenuOption{
-					Label:       ANImaps[m],
-					Value:       ANImaps[m],
+					Label:       aceonline.ANImaps[m],
+					Value:       aceonline.ANImaps[m],
 					Description: "strategic point",
 					Emoji: discordgo.ComponentEmoji{
-						Name:     strings.ReplaceAll(ANImaps[m], " ", ""),
-						ID:       svc.GetEmojiByName(context.Background(), i.GuildID, strings.ReplaceAll(ANImaps[m], " ", "")),
+						Name:     strings.ReplaceAll(aceonline.ANImaps[m], " ", ""),
+						ID:       strings.Split(strings.ReplaceAll(aceonline.ANImapsEmoji[m], ">", ""), ":")[2],
 						Animated: false,
 					},
 					Default: false,
@@ -82,14 +79,14 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 		}
 
 		if bcuMenuOption == nil {
-			for _, m := range sortedBCUmapKeys {
+			for _, m := range aceonline.SortedBCUmapKeys {
 				bcuMenuOption = append(bcuMenuOption, discordgo.SelectMenuOption{
-					Label:       BCUmaps[m],
-					Value:       BCUmaps[m],
+					Label:       aceonline.BCUmaps[m],
+					Value:       aceonline.BCUmaps[m],
 					Description: "strategic point",
 					Emoji: discordgo.ComponentEmoji{
-						Name:     strings.ReplaceAll(BCUmaps[m], " ", ""),
-						ID:       svc.GetEmojiByName(context.Background(), i.GuildID, strings.ReplaceAll(BCUmaps[m], " ", "")),
+						Name:     strings.ReplaceAll(aceonline.BCUmaps[m], " ", ""),
+						ID:       strings.Split(strings.ReplaceAll(aceonline.BCUmapsEmoji[m], ">", ""), ":")[2],
 						Animated: false,
 					},
 					Default: false,
@@ -127,18 +124,18 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 							return
 						}
 
-						err = svc.AddChannelId(context.Background(), i.GuildID, config.Strategicpoint, i.ChannelID)
+						err = svc.AddChannelId(context.Background(), i.GuildID, aceonline.Strategicpoint, i.ChannelID)
 						if err != nil {
-							err = svc.UpdateChannelId(context.Background(), i.GuildID, config.Strategicpoint, i.ChannelID)
+							err = svc.UpdateChannelId(context.Background(), i.GuildID, aceonline.Strategicpoint, i.ChannelID)
 							if err != nil {
 								fmt.Println(err)
 								return
 							}
 						}
 
-						err = svc.AddChannelId(context.Background(), i.GuildID, config.LogStrategicpoint, i.ChannelID)
+						err = svc.AddChannelId(context.Background(), i.GuildID, aceonline.LogStrategicpoint, i.ChannelID)
 						if err != nil {
-							err = svc.UpdateChannelId(context.Background(), i.GuildID, config.LogStrategicpoint, i.ChannelID)
+							err = svc.UpdateChannelId(context.Background(), i.GuildID, aceonline.LogStrategicpoint, i.ChannelID)
 							if err != nil {
 								fmt.Println(err)
 								return
@@ -158,9 +155,9 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 							return
 						}
 
-						err = svc.AddMessageId(context.Background(), i.GuildID, config.LogStrategicpoint, em.ID)
+						err = svc.AddMessageId(context.Background(), i.GuildID, aceonline.LogStrategicpoint, em.ID)
 						if err != nil {
-							err = svc.UpdateMessageId(context.Background(), i.GuildID, config.LogStrategicpoint, em.ID)
+							err = svc.UpdateMessageId(context.Background(), i.GuildID, aceonline.LogStrategicpoint, em.ID)
 							if err != nil {
 								fmt.Println(err)
 								return
@@ -175,9 +172,9 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 							fmt.Println(err)
 						}
 
-						err = svc.AddMessageId(context.Background(), i.GuildID, config.ANIMenu, messageComplex.ID)
+						err = svc.AddMessageId(context.Background(), i.GuildID, aceonline.ANIMenu, messageComplex.ID)
 						if err != nil {
-							err = svc.UpdateMessageId(context.Background(), i.GuildID, config.ANIMenu, messageComplex.ID)
+							err = svc.UpdateMessageId(context.Background(), i.GuildID, aceonline.ANIMenu, messageComplex.ID)
 							if err != nil {
 								fmt.Println(err)
 								return
@@ -192,9 +189,9 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 							fmt.Println("Failed to create BCU menu")
 							fmt.Println(err)
 						}
-						err = svc.AddMessageId(context.Background(), i.GuildID, config.BCUMenu, messageComplex.ID)
+						err = svc.AddMessageId(context.Background(), i.GuildID, aceonline.BCUMenu, messageComplex.ID)
 						if err != nil {
-							err = svc.UpdateMessageId(context.Background(), i.GuildID, config.BCUMenu, messageComplex.ID)
+							err = svc.UpdateMessageId(context.Background(), i.GuildID, aceonline.BCUMenu, messageComplex.ID)
 							if err != nil {
 								fmt.Println(err)
 								return
@@ -206,12 +203,12 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 			}
 		case discordgo.InteractionMessageComponent:
 			{
-				aniMenuID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.ANIMenu)
+				aniMenuID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, aceonline.ANIMenu)
 				if err != nil {
 					fmt.Println(err)
 				}
 
-				bcuMenuID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, config.BCUMenu)
+				bcuMenuID, err := svc.GetMessageIdByNameAndGuildID(context.Background(), i.GuildID, aceonline.BCUMenu)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -291,7 +288,7 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 				}
 
 				ani := false
-				for _, m := range ANImaps {
+				for _, m := range aceonline.ANImaps {
 					if m == i.ModalSubmitData().CustomID {
 						ani = true
 					}
@@ -337,24 +334,24 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 					}
 				}
 				wonEmoji := discordgo.Emoji{
-					ID:       svc.GetEmojiByName(context.Background(), i.GuildID, "won"),
-					Name:     "won",
+					ID:       strings.Split(strings.ReplaceAll(emoji.Won, ">", ""), ":")[2],
+					Name:     strings.Split(emoji.Won, ":")[1],
 					Animated: false,
 				}
 
 				lostEmoji := discordgo.Emoji{
-					ID:       svc.GetEmojiByName(context.Background(), i.GuildID, "lost"),
-					Name:     "lost",
+					ID:       strings.Split(strings.ReplaceAll(emoji.Lost, ">", ""), ":")[2],
+					Name:     strings.Split(emoji.Lost, ":")[1],
 					Animated: false,
 				}
 
 				dislikeEmoji := discordgo.Emoji{
-					ID:       svc.GetEmojiByName(context.Background(), i.GuildID, "dislike"),
-					Name:     "dislike",
+					ID:       strings.Split(strings.ReplaceAll(emoji.Dislike, ">", ""), ":")[2],
+					Name:     strings.Split(emoji.Dislike, ":")[1],
 					Animated: false,
 				}
 
-				spChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.Strategicpoint)
+				spChannelID, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, aceonline.Strategicpoint)
 				if err != nil {
 					fmt.Println(err)
 					return
@@ -386,7 +383,7 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 					fmt.Println(err)
 				}
 
-				spForumChannelId, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, config.SPforum)
+				spForumChannelId, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, aceonline.SPforum)
 				if err != nil {
 					fmt.Println(err)
 					return
@@ -421,17 +418,17 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 			}
 
 			if m.Content == mentionRole {
-				err := s.MessageReactionAdd(m.ChannelID, m.Message.ID, "won:"+svc.GetEmojiByName(context.Background(), m.GuildID, "won"))
+				err := s.MessageReactionAdd(m.ChannelID, m.Message.ID, strings.ReplaceAll(emoji.Won, ">", "")[2:])
 				if err != nil {
 					fmt.Println(err)
 					return
 				}
-				err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, "lost:"+svc.GetEmojiByName(context.Background(), m.GuildID, "lost"))
+				err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, strings.ReplaceAll(emoji.Lost, ">", "")[2:])
 				if err != nil {
 					fmt.Println(err)
 					return
 				}
-				err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, "dislike:"+svc.GetEmojiByName(context.Background(), m.GuildID, "dislike"))
+				err = s.MessageReactionAdd(m.ChannelID, m.Message.ID, strings.ReplaceAll(emoji.Dislike, ">", "")[2:])
 				if err != nil {
 					fmt.Println(err)
 					return
@@ -475,9 +472,9 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 
 					var winningNationShort string
 					if m.Embeds[0].Color == 0x00FFFF {
-						winningNationShort = config.ANIshortName
+						winningNationShort = aceonline.ANIshortName
 					} else {
-						winningNationShort = config.BCUshortName
+						winningNationShort = aceonline.BCUshortName
 					}
 
 					_, err = svc.AddSPtoLog(context.Background(), m.GuildID, mapName, "<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>", winningNationShort, spawningUser, m.Author.Username)
@@ -525,9 +522,9 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 				if m.Emoji.Name == "won" || m.Emoji.Name == "lost" {
 					var winningNationShort string
 					if m.Emoji.Name == "won" {
-						winningNationShort = config.ANIshortName
+						winningNationShort = aceonline.ANIshortName
 					} else {
-						winningNationShort = config.BCUshortName
+						winningNationShort = aceonline.BCUshortName
 					}
 
 					value, _ := strconv.Atoi(strings.Split(message.Embeds[0].Fields[1].Value, " ")[0])
