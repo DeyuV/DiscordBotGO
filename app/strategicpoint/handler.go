@@ -15,23 +15,24 @@ import (
 
 type Service interface {
 	GetChannelIdByNameAndGuildID(ctx context.Context, guildId, name string) (string, error)
+	UpdateChannelId(ctx context.Context, guildId, name, channelId string) error
+	AddChannelId(ctx context.Context, guildId, name, channelId string) error
+
 	UpdateMessageId(ctx context.Context, guildId, name, messageId string) error
 	GetMessageIdByNameAndGuildID(ctx context.Context, guildId, name string) (string, error)
 	AddMessageId(ctx context.Context, guildId, name, messageId string) error
 	DeleteMessageId(ctx context.Context, guildId, messageId string) error // useless for now
-	VerifySpId(ctx context.Context, guildId string, spId int) error
 
 	GetImageURL(name string) string
 
 	LogEmbed(mapValue, timeValue, nationValue string) *discordgo.MessageEmbed
 	InitResetLog(session *discordgo.Session)
-	UpdateLog(ctx context.Context, id int, guildId, mapName, spawnTime, winningNation, userModify string) error
-	AddSPtoLog(ctx context.Context, guildId, mapName, spawnTime, winningNation, userSpawning, userInteracting string) (int, error)
-	DeleteSPfromLog(ctx context.Context, id int) error
 	EditeEmbeds(ctx context.Context, session *discordgo.Session, guildId string, empty bool) error
 
-	UpdateChannelId(ctx context.Context, guildId, name, channelId string) error
-	AddChannelId(ctx context.Context, guildId, name, channelId string) error
+	AddSP(ctx context.Context, id, guildid, userSpawning string) error
+	UpdateSP(ctx context.Context, id, mapName, spawntime, winningNation, userInteracting string) error
+	DeleteSPfromLog(ctx context.Context, id string) error
+	VerifySpId(ctx context.Context, guildId, spId string) error
 }
 
 var (
@@ -262,12 +263,14 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 						return
 					}
 				}
+
 				if i.Message.ID == bcuMenuID {
 					_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{Components: &bcuResponseData})
 					if err != nil {
 						return
 					}
 				}
+
 			}
 		case discordgo.InteractionModalSubmit:
 			{
@@ -357,7 +360,7 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 					return
 				}
 
-				_, err = s.ChannelMessageSendComplex(spChannelID, &discordgo.MessageSend{
+				spMessage, err := s.ChannelMessageSendComplex(spChannelID, &discordgo.MessageSend{
 					Content: mentionRole,
 					Embed:   embed,
 				})
@@ -365,6 +368,20 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 				if err != nil {
 					fmt.Println(err)
 					return
+				}
+
+				if i.Member.Nick != "" {
+					err = svc.AddSP(context.Background(), spMessage.ID, i.GuildID, i.Member.Nick)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
+				} else {
+					err = svc.AddSP(context.Background(), spMessage.ID, i.GuildID, i.Member.User.Username)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
 				}
 
 				err = s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
@@ -437,7 +454,6 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 
 				go func() {
 					mapName := m.Embeds[0].Fields[0].Value
-					var spawningUser string
 
 					for t != 0 {
 						time.Sleep(1 * time.Minute)
@@ -477,7 +493,7 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 						winningNationShort = aceonline.BCUshortName
 					}
 
-					_, err = svc.AddSPtoLog(context.Background(), m.GuildID, mapName, "<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>", winningNationShort, spawningUser, m.Author.Username)
+					err = svc.UpdateSP(context.Background(), m.ID, mapName, "<t:"+strconv.Itoa(int(time.Now().Add(time.Hour*time.Duration(1*-1)).Unix()))+":R>", winningNationShort, "UWS BOT")
 					if err != nil {
 						fmt.Println(err)
 						return
@@ -517,6 +533,12 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 						fmt.Println(err)
 						return
 					}
+
+					err = svc.DeleteSPfromLog(context.Background(), m.MessageReaction.MessageID)
+					if err != nil {
+						fmt.Println(err)
+						return
+					}
 					return
 				}
 				if m.Emoji.Name == "won" || m.Emoji.Name == "lost" {
@@ -530,8 +552,8 @@ func Reactions(svc Service) func(s *discordgo.Session, m *discordgo.MessageReact
 					value, _ := strconv.Atoi(strings.Split(message.Embeds[0].Fields[1].Value, " ")[0])
 					value = 60 - value
 
-					_, err = svc.AddSPtoLog(context.Background(), m.GuildID, message.Embeds[0].Fields[0].Value,
-						"<t:"+strconv.Itoa(int(time.Now().Add(time.Minute*time.Duration(value*-1)).Unix()))+":R>", winningNationShort, "?", m.Member.User.Username)
+					err = svc.UpdateSP(context.Background(), m.MessageReaction.MessageID, message.Embeds[0].Fields[0].Value,
+						"<t:"+strconv.Itoa(int(time.Now().Add(time.Minute*time.Duration(value*-1)).Unix()))+":R>", winningNationShort, m.Member.User.Username)
 					if err != nil {
 						fmt.Println(err)
 						return

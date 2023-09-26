@@ -21,7 +21,7 @@ CREATE TABLE "guildcommands"
 
 CREATE TABLE "guildlogsp"
 (
-    "id" serial primary key,
+    "id" varchar(255) primary key,
     "guildid" varchar(70),
     "map" varchar(255) not null,
     "spawntime" varchar(255) not null,

@@ -53,43 +53,20 @@ func (r *repositoryImpl) GetMessageIdByNameAndGuildID(ctx context.Context, guild
 	return messageId, nil
 }
 
-func (r *repositoryImpl) AddSP(ctx context.Context, guildId, mapName, spawnTime, winningNation, userSpawning, userInteracting string) (int, error) {
-	var spId int
-	err := r.db.QueryRow(ctx, `INSERT INTO guildlogsp (guildid, map, spawntime, winningnation, userspawning, userinteracting, spdate) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`, guildId, mapName, spawnTime, winningNation, userSpawning, userInteracting, time.Now()).Scan(&spId)
+func (r *repositoryImpl) AddSP(ctx context.Context, id, guildId, userSpawning string) error {
+	_, err := r.db.Exec(ctx, `INSERT INTO guildlogsp (id, guildid, map, spawntime, winningnation, userspawning, userinteracting, spdate) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`, id, guildId, "-", "-", "-", userSpawning, "-", time.Now())
 
-	if err != nil {
-		return 0, err
-	}
-
-	return spId, nil
+	return err
 }
 
-func (r *repositoryImpl) DeleteSP(ctx context.Context, id int) error {
+func (r *repositoryImpl) DeleteSP(ctx context.Context, id string) error {
 	_, err := r.db.Exec(ctx, `DELETE FROM guildlogsp WHERE id = $1`, id)
 
 	return err
 }
 
-func (r *repositoryImpl) UpdateSPmap(ctx context.Context, id int, mapName string) error {
-	_, err := r.db.Exec(ctx, `UPDATE guildlogsp SET map = $1 WHERE id = $2`, mapName, id)
-
-	return err
-}
-
-func (r *repositoryImpl) UpdateSPspawnTime(ctx context.Context, id int, spawnTime string) error {
-	_, err := r.db.Exec(ctx, `UPDATE guildlogsp SET spawntime = $1 WHERE id = $2`, spawnTime, id)
-
-	return err
-}
-
-func (r *repositoryImpl) UpdateSPwinningNation(ctx context.Context, id int, winningNation string) error {
-	_, err := r.db.Exec(ctx, `UPDATE guildlogsp SET winningnation = $1 WHERE id = $2`, winningNation, id)
-
-	return err
-}
-
-func (r *repositoryImpl) UpdateSPmodified(ctx context.Context, id int, modified string) error {
-	_, err := r.db.Exec(ctx, `UPDATE guildlogsp SET modified = $1 WHERE id = $2`, modified, id)
+func (r *repositoryImpl) UpdateSP(ctx context.Context, id, mapName, spawntime, winningNation, userInteracting string) error {
+	_, err := r.db.Exec(ctx, `UPDATE guildlogsp SET map = $2, spawntime = $3, winningnation = $4, userinteracting = $5  WHERE id = $1`, id, mapName, spawntime, winningNation, userInteracting)
 
 	return err
 }
@@ -127,7 +104,7 @@ func (r *repositoryImpl) GetAllSPLogsByGuild(ctx context.Context, guildId string
 	return spLogs, nil
 }
 
-func (r *repositoryImpl) GetSPbyGuildAndId(ctx context.Context, guildId string, spId int) error {
+func (r *repositoryImpl) GetSPbyGuildAndId(ctx context.Context, guildId, spId string) error {
 	_, err := r.db.Query(ctx, `SELECT * FROM guildlogsp WHERE guildid = $1 AND id = $2`, guildId, spId)
 
 	return err

@@ -6,11 +6,9 @@ import (
 	"DiscordBotGO/pkg/emoji"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
 	"time"
 
@@ -25,14 +23,11 @@ type Repository interface {
 	DeleteMessageId(ctx context.Context, guildId, messageId string) error
 	GetGuildId(ctx context.Context, id int) (string, error)
 
-	AddSP(ctx context.Context, guildId, mapName, spawnTime, winningNation, userSpawning, userInteracting string) (int, error)
-	DeleteSP(ctx context.Context, id int) error
-	UpdateSPmap(ctx context.Context, id int, mapName string) error
-	UpdateSPspawnTime(ctx context.Context, id int, spawnTime string) error
-	UpdateSPwinningNation(ctx context.Context, id int, winningNation string) error
-	UpdateSPmodified(ctx context.Context, id int, modified string) error
+	AddSP(ctx context.Context, id, guildId, userSpawning string) error
+	DeleteSP(ctx context.Context, id string) error
+	UpdateSP(ctx context.Context, id, mapName, spawntime, winningNation, userInteracting string) error
 	GetAllSPLogsByGuild(ctx context.Context, guildId string) ([]SPLogs, error)
-	GetSPbyGuildAndId(ctx context.Context, guildId string, spId int) error
+	GetSPbyGuildAndId(ctx context.Context, guildId, spId string) error
 
 	UpdateChannelId(ctx context.Context, guildId, name, channelId string) error
 	AddChannelId(ctx context.Context, guildId, name, channelId string) error
@@ -122,45 +117,6 @@ func (s *serviceImplementation) GetImageURL(mapName string) string {
 	return ""
 }
 
-func (s *serviceImplementation) UpdateLog(ctx context.Context, id int, guildId, mapName, spawnTime, winningNation, userModify string) error {
-	spGuildId, err := s.repo.GetGuildId(ctx, id)
-	if err != nil {
-		return err
-	}
-
-	if spGuildId != guildId {
-		return errors.New("wrong sp id")
-	}
-
-	if mapName != "?" {
-		err = s.repo.UpdateSPmap(ctx, id, mapName)
-		if err != nil {
-			return err
-		}
-	}
-
-	if spawnTime != "?" {
-		err = s.repo.UpdateSPspawnTime(ctx, id, spawnTime)
-		if err != nil {
-			return err
-		}
-	}
-
-	if winningNation != "?" {
-		err = s.repo.UpdateSPwinningNation(ctx, id, winningNation)
-		if err != nil {
-			return err
-		}
-	}
-
-	err = s.repo.UpdateSPmodified(ctx, id, userModify)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (s *serviceImplementation) RefreshLog(ctx context.Context, guildId string) (*discordgo.MessageEmbed, error) {
 	spLogs, err := s.repo.GetAllSPLogsByGuild(ctx, guildId)
 	if err != nil {
@@ -170,7 +126,6 @@ func (s *serviceImplementation) RefreshLog(ctx context.Context, guildId string) 
 	var concatSpLogs SPLogsRefresh
 	for _, sp := range spLogs {
 		if sp.SPDate.Day() == time.Now().Day() && sp.SPDate.Month() == time.Now().Month() {
-			concatSpLogs.ID += strconv.Itoa(sp.ID) + "\n"
 			concatSpLogs.MapName += sp.MapName + "\n"
 			concatSpLogs.SpawnTime += sp.SpawnTime + "\n"
 
@@ -226,11 +181,15 @@ func (s *serviceImplementation) EditeEmbeds(ctx context.Context, session *discor
 	return nil
 }
 
-func (s *serviceImplementation) AddSPtoLog(ctx context.Context, guildId, mapName, spawnTime, winningNation, userSpawning, userInteracting string) (int, error) {
-	return s.repo.AddSP(ctx, guildId, mapName, spawnTime, winningNation, userSpawning, userInteracting)
+func (s *serviceImplementation) AddSP(ctx context.Context, id, guildId, userSpawning string) error {
+	return s.repo.AddSP(ctx, id, guildId, userSpawning)
 }
 
-func (s *serviceImplementation) DeleteSPfromLog(ctx context.Context, id int) error {
+func (s *serviceImplementation) UpdateSP(ctx context.Context, id, mapName, spawntime, winningNation, userInteracting string) error {
+	return s.repo.UpdateSP(ctx, id, mapName, spawntime, winningNation, userInteracting)
+}
+
+func (s *serviceImplementation) DeleteSPfromLog(ctx context.Context, id string) error {
 	return s.repo.DeleteSP(ctx, id)
 }
 
@@ -254,7 +213,7 @@ func (s *serviceImplementation) DeleteMessageId(ctx context.Context, guildId, me
 	return s.repo.DeleteMessageId(ctx, guildId, messageId)
 }
 
-func (s *serviceImplementation) VerifySpId(ctx context.Context, guildId string, spId int) error {
+func (s *serviceImplementation) VerifySpId(ctx context.Context, guildId, spId string) error {
 	return s.repo.GetSPbyGuildAndId(ctx, guildId, spId)
 }
 

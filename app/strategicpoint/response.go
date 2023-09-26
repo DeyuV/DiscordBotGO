@@ -10,7 +10,7 @@ type UploadCareAPIFilesResponse struct {
 }
 
 type SPLogs struct {
-	ID              int
+	ID              string
 	GuildID         string
 	MapName         string
 	SpawnTime       string
