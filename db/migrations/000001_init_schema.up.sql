@@ -54,5 +54,4 @@ CREATE TABLE "guildmessagesid"
 INSERT INTO "commands"
     (name, description, defaultcommand)
 VALUES
-    ('setup-sp', 'Setup for all sp commands', true),
-    ('set-sp-forum-channel', 'Set current channel to be used for forum sp notification', true);
+    ('setup-sp', 'Setup for all sp commands', true);

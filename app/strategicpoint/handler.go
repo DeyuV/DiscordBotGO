@@ -399,22 +399,6 @@ func SP(svc Service) func(s *discordgo.Session, i *discordgo.InteractionCreate) 
 					fmt.Println("Failed modal submit")
 					fmt.Println(err)
 				}
-
-				spForumChannelId, err := svc.GetChannelIdByNameAndGuildID(context.Background(), i.GuildID, aceonline.SPforum)
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
-
-				_, err = s.ChannelMessageSendEmbed(spForumChannelId, &discordgo.MessageEmbed{
-					Title:       "A strategic point has been created!",
-					Description: "Map: " + i.ModalSubmitData().CustomID,
-					Image:       &discordgo.MessageEmbedImage{URL: svc.GetImageURL(i.ModalSubmitData().CustomID)}})
-
-				if err != nil {
-					fmt.Println(err)
-					return
-				}
 			}
 		}
 	}
@@ -476,7 +460,7 @@ func Notification(svc Service) func(s *discordgo.Session, m *discordgo.MessageCr
 
 						_, err = s.ChannelMessageEditEmbed(m.ChannelID, m.ID, embed)
 						if err != nil {
-							fmt.Println(err)
+							fmt.Println("SP Notification embed missing")
 							return
 						}
 					}

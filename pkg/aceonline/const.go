@@ -9,5 +9,4 @@ const (
 	BCUshortName      = "bcu"
 	ANIlongName       = "Arlington National Influence"
 	BCUlongName       = "Bygeniou City United"
-	SPforum           = "spforum"
 )

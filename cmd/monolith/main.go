@@ -41,9 +41,9 @@ func main() {
 	fmt.Println("Connected to PostgreSQL database successfully!")
 
 	// Development token
-	token := os.Getenv("DEVELOPMENTTOKEN")
+	//token := os.Getenv("DEVELOPMENTTOKEN")
 	// Deploy token (UWS)
-	//token := os.Getenv("UWSTOKEN")
+	token := os.Getenv("UWSTOKEN")
 
 	// Create a new Discord session using the provided token
 	bot, err := discordgo.New("Bot " + token)
