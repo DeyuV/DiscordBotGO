@@ -1,5 +1,5 @@
 # Use an official Golang runtime as the base image
-FROM golang:1.18 AS build
+FROM golang:1.21.3 AS build
 
 # Install the tzdata package to include timezone data in the container
 RUN apt-get update && apt-get install -y --no-install-recommends tzdata && rm -rf /var/lib/apt/lists/*
