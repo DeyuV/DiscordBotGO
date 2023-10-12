@@ -12,9 +12,7 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   uws-bot:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/discordbotgo/uws-bot
     ports:
       - "8080:8080"
     depends_on:
