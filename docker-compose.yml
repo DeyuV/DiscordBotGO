@@ -2,6 +2,7 @@ version: '3.8'
 services:
   postgres:
     image: postgres:latest
+    restart: always
     environment:
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
@@ -13,6 +14,7 @@ services:
 
   uws-bot:
     image: docker.io/rockpigeon/uws-bot
+    restart: always
     ports:
       - "8080:8080"
     depends_on:
